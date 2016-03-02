@@ -72,10 +72,15 @@ module ExampleAgent
       return 1
     end
 
-    agent_guid 'com.none.redborder'
+    def memory_total_druid_broker()
+      puts `(sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_broker/supervise/pid 2>/dev/null)`.strip.to_i
+      return 1
+    end
+
+    agent_guid 'com.none.redbordermanager'
     agent_version '1.0.2'
     agent_config_options :hertz # frequency of the periodic functions
-    agent_human_labels('Manager Agent') { 'redborder monitor data' }
+    agent_human_labels('Manager') { 'redborder' }
 
     def poll_cycle
       #   puts `top -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'`
@@ -94,6 +99,7 @@ module ExampleAgent
         report_metric 'AVIO', 'Value', get_avio()
         report_metric 'DISK_PERCENT', 'Value', disk_percent(manager)
         report_metric 'DISK_LOAD', 'Value', disk_load()
+        report_metric 'MEMORY_DRUID_BROKER', 'Value', 100*memory_total_druid_broker()/mem_total(manager)
       end
     end
   end
