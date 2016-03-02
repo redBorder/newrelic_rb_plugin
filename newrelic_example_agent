@@ -23,14 +23,38 @@ module ExampleAgent
       end
     end
 
-    def memTotal(manager)
+    def mem_total(manager)
       response = manager.get(['1.3.6.1.4.1.2021.4.5.0'])
       response.each_varbind do |vb|
         puts "#{vb.name.to_s}  #{vb.value.to_s}  #{vb.value.asn1_type}"
         return vb.value.to_f
       end
     end
-    
+
+    def mem_free(manager)
+      response = manager.get(['1.3.6.1.4.1.2021.4.6.0'])
+      response.each_varbind do |vd|
+        puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
+        return vd.value.to_i
+      end
+    end
+
+    def mem_total_buffer(manager)
+      response = manager.get(["1.3.6.1.4.1.2021.4.14.0"])
+      response.each_varbind do |vd|
+        puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
+        return vd.value.to_i
+      end
+    end
+
+    def mem_total_cache(manager)
+      response = manager.get(["1.3.6.1.4.1.2021.4.15.0"])
+      response.each_varbind do |vd|
+        puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
+        return vd.value.to_i
+      end
+    end
+
     agent_guid 'com.none.onlytesting'
     agent_version '1.0.1'
     agent_config_options :hertz # frequency of the periodic functions
@@ -42,11 +66,16 @@ module ExampleAgent
       # grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'`
       SNMP::Manager.open(community: 'redBorder', host: '10.0.203.8') do |manager|
         # response = manager.get(['sysDescr.0', 'sysName.0'])
+        memory = 100 * (mem_total(manager) - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager))
         report_metric 'CPU', 'Value', cpu(manager)
-        report_metric 'MEM_TOTAL', 'Value', memTotal(manager)
+        report_metric 'MEM_TOTAL', 'Value', mem_total(manager)
+        report_metric 'MEM_FREE', 'Value', mem_free(manager)
+        report_metric 'MEM_TOTAL_BUFFER', 'Value', mem_total_buffer(manager)
+        report_metric 'MEM_TOTAL_CACHE', 'Value', mem_total_cache(manager)
+        report_metric 'MEM', 'Value', memory/mem_total(manager)
+      end
     end
   end
-end
 
   #
   # Register this agent with the component.
