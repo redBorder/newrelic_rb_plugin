@@ -20,7 +20,7 @@ start() {
           echo "$prog is currently running"
         else
           echo -n "Starting $prog: "
-          nohup /opt/newrelic/newrelic/newrelic_example_agent 2> /dev/null &
+          /opt/newrelic/newrelic/newrelic_example_agent > /dev/null &
           RETVAL=$?
           [ $RETVAL -eq 0 ] && touch $LOCKFILE && echo_success
           echo
@@ -29,14 +29,12 @@ start() {
 }
 stop() {
         echo -n "Shutting down $prog: "
-        #action killproc $prog
-
         if [ -f $LOCKFILE  ] ; then
           PID=$(ps aux | grep $executable | grep -v grep | awk {'print $2'})
           kill $PID
           rm -f $LOCKFILE
         else
-          echo_failure; failure  
+          echo_failure; failure
         fi
         RETVAL=$?
         [ $RETVAL -eq 0 ] && echo_success
