@@ -60,21 +60,59 @@ module ExampleAgent
     end
 
     def disk_percent(manager)
-      response = manager.get(["    1.3.6.1.4.1.2021.9.1.9.1"])
+      response = manager.get(["1.3.6.1.4.1.2021.9.1.9.1"])
       response.each_varbind do |vd|
         puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
         return vd.value.to_i
       end
     end
 
-    def disk_load()
-      puts `(snmptable -v 2c -c redBorder 127.0.0.1 diskIOTable|grep ' dm-0 ' | awk '{print $7}')`.strip.to_i
-      return 1
+    def disk_load
+      return `(snmptable -v 2c -c redBorder 127.0.0.1 diskIOTable|grep ' dm-0 ' | awk '{print $7}')`.strip.to_i
     end
 
-    def memory_total_druid_broker()
-      puts `(sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_broker/supervise/pid 2>/dev/null)`.strip.to_i
-      return 1
+    def memory_total_druid_broker
+      return `(sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_broker/supervise/pid 2>/dev/null)`.strip.to_i
+    end
+
+    def memory_total_druid_coordinator
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_coordinator/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def memory_total_druid_historical
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_historical/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def memory_total_druid_realtime
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_realtime/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def memory_total_kafka
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/kafka/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def memory_total_nprobe
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/nprobe/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def memory_total_postgresql
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/postgresql/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def memory_total_rbwebui
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/rb-webui/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def memory_total_zookeeper
+      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/zookeeper/supervise/pid 2>/dev/null`.strip.to_i
+    end
+
+    def latency
+      return `nice -n 19 fping -q -s fcojriosbello 2>&1| grep 'avg round trip time'|awk '{print $1}'`.strip.to_i
+    end
+
+    def pkts_rcv
+      return 100-`sudo /bin/nice -n 19 /usr/sbin/fping -p 1 -c 10 fcojriosbello 2>&1 | tail -n 1 | awk '{print $5}' | sed 's/%.*$//' | tr '/' ' ' | awk '{print $3}'`.strip.to_i
     end
 
     agent_guid 'com.none.redbordermanager'
@@ -83,23 +121,34 @@ module ExampleAgent
     agent_human_labels('Manager') { 'redborder' }
 
     def poll_cycle
-      #   puts `top -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'`
-      #  report_metric 'CPU', 'Value', `top -b -n2 |
-      # grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'`
+
       SNMP::Manager.open(community: 'redBorder', host: '10.0.203.8') do |manager|
-        # response = manager.get(['sysDescr.0', 'sysName.0'])
-        memory = 100 * (mem_total(manager) - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager))
+
+        memory_total = mem_total(manager)
+
+        memory = 100 * (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager))
+
         report_metric 'CPU', 'Value', cpu(manager)
-        report_metric 'MEM_TOTAL', 'Value', mem_total(manager)
+        report_metric 'LATENCY', 'Value', latency
+        report_metric 'PKTS_RCV', 'Value', pkts_rcv
+        report_metric 'MEM_TOTAL', 'Value', memory_total
         report_metric 'MEM_FREE', 'Value', mem_free(manager)
         report_metric 'MEM_TOTAL_BUFFER', 'Value', mem_total_buffer(manager)
         report_metric 'MEM_TOTAL_CACHE', 'Value', mem_total_cache(manager)
-        report_metric 'MEM', 'Value', memory/mem_total(manager)
+        report_metric 'MEM', 'Value', memory/memory_total
         # (disk utilization)avio shows the average number of milliseconds p/req
         report_metric 'AVIO', 'Value', get_avio()
         report_metric 'DISK_PERCENT', 'Value', disk_percent(manager)
         report_metric 'DISK_LOAD', 'Value', disk_load()
-        report_metric 'MEMORY_DRUID_BROKER', 'Value', 100*memory_total_druid_broker()/mem_total(manager)
+        report_metric 'MEMORY_DRUID_BROKER', 'Value', 100*memory_total_druid_broker()/memory_total
+        report_metric 'MEMORY_DRUID_COORDINATOR', 'Value', 100*memory_total_druid_coordinator()/memory_total
+        report_metric 'MEMORY_DRUID_HISTORICAL', 'Value', 100*memory_total_druid_historical()/memory_total
+        report_metric 'MEMORY_DRUID_REALTIME', 'Value', 100*memory_total_druid_realtime()/memory_total
+        report_metric 'MEMORY_KAFKA', 'Value', 100*memory_total_kafka()/memory_total
+        report_metric 'MEMORY_NPROBE', 'Value', 100*memory_total_nprobe()/memory_total
+        report_metric 'MEMORY_POSTGRESQL', 'Value', 100*memory_total_postgresql()/memory_total
+        report_metric 'MEMORY_RBWEBUI', 'Value', 100*memory_total_rbwebui()/memory_total
+        report_metric 'MEMORY_ZOOKEEPER', 'Value', 100*memory_total_zookeeper()/memory_total
       end
     end
   end
