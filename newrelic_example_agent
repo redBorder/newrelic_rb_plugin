@@ -120,35 +120,38 @@ module ExampleAgent
     agent_config_options :hertz # frequency of the periodic functions
     agent_human_labels('Manager') { 'redborder' }
 
+    #host = `/opt/rb/bin/rb_get_managers.rb | grep enabled | awk {'print $1'}`.strip
+
+
     def poll_cycle
 
       SNMP::Manager.open(community: 'redBorder', host: '10.0.203.8') do |manager|
 
+        host = `hostname`.strip
         memory_total = mem_total(manager)
-
         memory = 100 * (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager))
 
-        report_metric 'CPU', 'Value', cpu(manager)
-        report_metric 'LATENCY', 'Value', latency
-        report_metric 'PKTS_RCV', 'Value', pkts_rcv
-        report_metric 'MEM_TOTAL', 'Value', memory_total
-        report_metric 'MEM_FREE', 'Value', mem_free(manager)
-        report_metric 'MEM_TOTAL_BUFFER', 'Value', mem_total_buffer(manager)
-        report_metric 'MEM_TOTAL_CACHE', 'Value', mem_total_cache(manager)
-        report_metric 'MEM', 'Value', memory/memory_total
+        report_metric host + 'CPU', 'Value', cpu(manager)
+        report_metric host + 'LATENCY', 'Value', latency
+        report_metric host + 'PKTS_RCV', 'Value', pkts_rcv
+        report_metric host + 'MEM_TOTAL', 'Value', memory_total
+        report_metric host + 'MEM_FREE', 'Value', mem_free(manager)
+        report_metric host + 'MEM_TOTAL_BUFFER', 'Value', mem_total_buffer(manager)
+        report_metric host + 'MEM_TOTAL_CACHE', 'Value', mem_total_cache(manager)
+        report_metric host + 'MEM', 'Value', memory/memory_total
         # (disk utilization)avio shows the average number of milliseconds p/req
-        report_metric 'AVIO', 'Value', get_avio()
-        report_metric 'DISK_PERCENT', 'Value', disk_percent(manager)
-        report_metric 'DISK_LOAD', 'Value', disk_load()
-        report_metric 'MEMORY_DRUID_BROKER', 'Value', 100*memory_total_druid_broker()/memory_total
-        report_metric 'MEMORY_DRUID_COORDINATOR', 'Value', 100*memory_total_druid_coordinator()/memory_total
-        report_metric 'MEMORY_DRUID_HISTORICAL', 'Value', 100*memory_total_druid_historical()/memory_total
-        report_metric 'MEMORY_DRUID_REALTIME', 'Value', 100*memory_total_druid_realtime()/memory_total
-        report_metric 'MEMORY_KAFKA', 'Value', 100*memory_total_kafka()/memory_total
-        report_metric 'MEMORY_NPROBE', 'Value', 100*memory_total_nprobe()/memory_total
-        report_metric 'MEMORY_POSTGRESQL', 'Value', 100*memory_total_postgresql()/memory_total
-        report_metric 'MEMORY_RBWEBUI', 'Value', 100*memory_total_rbwebui()/memory_total
-        report_metric 'MEMORY_ZOOKEEPER', 'Value', 100*memory_total_zookeeper()/memory_total
+        report_metric host + 'AVIO', 'Value', get_avio()
+        report_metric host + 'DISK_PERCENT', 'Value', disk_percent(manager)
+        report_metric host + 'DISK_LOAD', 'Value', disk_load()
+        report_metric host + 'MEMORY_DRUID_BROKER', 'Value', 100*memory_total_druid_broker()/memory_total
+        report_metric host + 'MEMORY_DRUID_COORDINATOR', 'Value', 100*memory_total_druid_coordinator()/memory_total
+        report_metric host + 'MEMORY_DRUID_HISTORICAL', 'Value', 100*memory_total_druid_historical()/memory_total
+        report_metric host + 'MEMORY_DRUID_REALTIME', 'Value', 100*memory_total_druid_realtime()/memory_total
+        report_metric host + 'MEMORY_KAFKA', 'Value', 100*memory_total_kafka()/memory_total
+        report_metric host + 'MEMORY_NPROBE', 'Value', 100*memory_total_nprobe()/memory_total
+        report_metric host + 'MEMORY_POSTGRESQL', 'Value', 100*memory_total_postgresql()/memory_total
+        report_metric host + 'MEMORY_RBWEBUI', 'Value', 100*memory_total_rbwebui()/memory_total
+        report_metric host + 'MEMORY_ZOOKEEPER', 'Value', 100*memory_total_zookeeper()/memory_total
       end
     end
   end
