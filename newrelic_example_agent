@@ -15,157 +15,226 @@ require 'newrelic_plugin'
 module ExampleAgent
   class Agent < NewRelic::Plugin::Agent::Base
 
-    def cpu(manager)
-      response = manager.get(['1.3.6.1.4.1.2021.11.9.0'])
-      response.each_varbind do |vb|
-        puts "#{vb.name.to_s}  #{vb.value.to_s}  #{vb.value.asn1_type}"
-        return 100 - vb.value.to_f
-      end
-    end
 
-    def mem_total(manager)
-      response = manager.get(['1.3.6.1.4.1.2021.4.5.0'])
-      response.each_varbind do |vb|
-        puts "#{vb.name.to_s}  #{vb.value.to_s}  #{vb.value.asn1_type}"
-        return vb.value.to_f
-      end
-    end
+    def druid_parser
+      Dir.glob('*.log') do |log_file|
+        File.open('/var/log/druid/realtime.log', 'r') do |file|
+          file.each_line do |line| unless line.nil?
+            metric = line.match(/"metric":"(.*)","value/)[1] unless line.match(/"metric":"(.*)","value/).nil?
+            value = line.match(/"value":(\d+),"/)[1] unless line.match(/"value":(\d+),"/).nil?
 
-    def mem_free(manager)
-      response = manager.get(['1.3.6.1.4.1.2021.4.6.0'])
-      response.each_varbind do |vd|
-        puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
-        return vd.value.to_i
-      end
-    end
-
-    def mem_total_buffer(manager)
-      response = manager.get(["1.3.6.1.4.1.2021.4.14.0"])
-      response.each_varbind do |vd|
-        puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
-        return vd.value.to_i
-      end
-    end
-
-    def mem_total_cache(manager)
-      response = manager.get(["1.3.6.1.4.1.2021.4.15.0"])
-      response.each_varbind do |vd|
-        puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
-        return vd.value.to_i
-      end
-    end
-
-    def get_avio()
-      return `(atop 2 2 | grep avio |  awk '{print $15}' | paste -s -d'+' | sed 's/^/scale=3; (/' | sed 's|$|)/2|' | bc)`
-    end
-
-    def disk_percent(manager)
-      response = manager.get(["1.3.6.1.4.1.2021.9.1.9.1"])
-      response.each_varbind do |vd|
-        puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
-        return vd.value.to_i
-      end
-    end
-
-    def disk_load
-      return `(snmptable -v 2c -c redBorder 127.0.0.1 diskIOTable|grep ' dm-0 ' | awk '{print $7}')`.strip.to_i
-    end
-
-    def memory_total_druid_broker
-      return `(sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_broker/supervise/pid 2>/dev/null)`.strip.to_i
-    end
-
-    def memory_total_druid_coordinator
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_coordinator/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def memory_total_druid_historical
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_historical/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def memory_total_druid_realtime
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_realtime/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def memory_total_kafka
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/kafka/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def memory_total_nprobe
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/nprobe/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def memory_total_postgresql
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/postgresql/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def memory_total_rbwebui
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/rb-webui/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def memory_total_zookeeper
-      return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/zookeeper/supervise/pid 2>/dev/null`.strip.to_i
-    end
-
-    def latency
-      return `nice -n 19 fping -q -s fcojriosbello 2>&1| grep 'avg round trip time'|awk '{print $1}'`.strip.to_i
-    end
-
-    def pkts_rcv
-      return 100-`sudo /bin/nice -n 19 /usr/sbin/fping -p 1 -c 10 fcojriosbello 2>&1 | tail -n 1 | awk '{print $5}' | sed 's/%.*$//' | tr '/' ' ' | awk '{print $3}'`.strip.to_i
-    end
-
-    agent_guid 'com.none.redbordermanager'
-    agent_version '1.0.2'
-    agent_config_options :hertz # frequency of the periodic functions
-    agent_human_labels('Manager') { 'redborder' }
-
-    #host = `/opt/rb/bin/rb_get_managers.rb | grep enabled | awk {'print $1'}`.strip
-
-
-    def poll_cycle
-
-      SNMP::Manager.open(community: 'redBorder', host: '10.0.203.8') do |manager|
-
-        host = `hostname`.strip
-        memory_total = mem_total(manager)
-        memory = 100 * (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager))
-
-        report_metric host + 'CPU', 'Value', cpu(manager)
-        report_metric host + 'LATENCY', 'Value', latency
-        report_metric host + 'PKTS_RCV', 'Value', pkts_rcv
-        report_metric host + 'MEM_TOTAL', 'Value', memory_total
-        report_metric host + 'MEM_FREE', 'Value', mem_free(manager)
-        report_metric host + 'MEM_TOTAL_BUFFER', 'Value', mem_total_buffer(manager)
-        report_metric host + 'MEM_TOTAL_CACHE', 'Value', mem_total_cache(manager)
-        report_metric host + 'MEM', 'Value', memory/memory_total
-        # (disk utilization)avio shows the average number of milliseconds p/req
-        report_metric host + 'AVIO', 'Value', get_avio()
-        report_metric host + 'DISK_PERCENT', 'Value', disk_percent(manager)
-        report_metric host + 'DISK_LOAD', 'Value', disk_load()
-        report_metric host + 'MEMORY_DRUID_BROKER', 'Value', 100*memory_total_druid_broker()/memory_total
-        report_metric host + 'MEMORY_DRUID_COORDINATOR', 'Value', 100*memory_total_druid_coordinator()/memory_total
-        report_metric host + 'MEMORY_DRUID_HISTORICAL', 'Value', 100*memory_total_druid_historical()/memory_total
-        report_metric host + 'MEMORY_DRUID_REALTIME', 'Value', 100*memory_total_druid_realtime()/memory_total
-        report_metric host + 'MEMORY_KAFKA', 'Value', 100*memory_total_kafka()/memory_total
-        report_metric host + 'MEMORY_NPROBE', 'Value', 100*memory_total_nprobe()/memory_total
-        report_metric host + 'MEMORY_POSTGRESQL', 'Value', 100*memory_total_postgresql()/memory_total
-        report_metric host + 'MEMORY_RBWEBUI', 'Value', 100*memory_total_rbwebui()/memory_total
-        report_metric host + 'MEMORY_ZOOKEEPER', 'Value', 100*memory_total_zookeeper()/memory_total
+            if metric == 'jvm/pool/committed'
+              @jvm_pool_commited = value
+            elsif metric == 'jvm/pool/init'
+              @jvm_pool_init = value
+            elsif metric == 'jvm/pool/used'
+              @jvm_pool_used = value
+            elsif metric == 'jvm/pool/max'
+              @jvm_pool_max = value
+            elsif metric == 'jvm/bufferpool/used'
+              @jvm_bufferpool_used = value
+            elsif metric == 'jvm/bufferpool/count'
+              @jvm_bufferpool_count = value
+            elsif metric == 'jvm/bufferpool/capacity'
+              @jvm_bufferpool_capacity = value
+            elsif metric == 'jvm/mem/init'
+              @jvm_mem_init = value
+            elsif metric == 'jvm/mem/max'
+              @jvm_mem_max = value
+            elsif metric == 'jvm/mem/used'
+              @jvm_mem_used = value
+            elsif metric == 'jvm/mem/commited'
+              @jvm_mem_commited = value
+            elsif metric == 'jvm/gc/count'
+              @jvm_gc_count = value
+            elsif metric == 'jvm/gc/time'
+              @jvm_gc_time = value
+            end
+          end
+        end
       end
     end
   end
 
-  #
-  # Register this agent with the component.
-  # The ExampleAgent is the name of the module that defines this
-  # driver (the module must contain at least three classes - a
-  # PollCycle, a Metric and an Agent class, as defined above).
-  #
-  NewRelic::Plugin::Setup.install_agent :example, ExampleAgent
+  def cpu(manager)
+    response = manager.get(['1.3.6.1.4.1.2021.11.9.0'])
+    response.each_varbind do |vb|
+      puts "#{vb.name.to_s}  #{vb.value.to_s}  #{vb.value.asn1_type}"
+      return 100 - vb.value.to_f
+    end
+  end
 
-  #
-  # Launch the agent; this never returns.
-  #
-  NewRelic::Plugin::Run.setup_and_run
+  def mem_total(manager)
+    response = manager.get(['1.3.6.1.4.1.2021.4.5.0'])
+    response.each_varbind do |vb|
+      puts "#{vb.name.to_s}  #{vb.value.to_s}  #{vb.value.asn1_type}"
+      return vb.value.to_f
+    end
+  end
+
+  def mem_free(manager)
+    response = manager.get(['1.3.6.1.4.1.2021.4.6.0'])
+    response.each_varbind do |vd|
+      puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
+      return vd.value.to_i
+    end
+  end
+
+  def mem_total_buffer(manager)
+    response = manager.get(["1.3.6.1.4.1.2021.4.14.0"])
+    response.each_varbind do |vd|
+      puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
+      return vd.value.to_i
+    end
+  end
+
+  def mem_total_cache(manager)
+    response = manager.get(["1.3.6.1.4.1.2021.4.15.0"])
+    response.each_varbind do |vd|
+      puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
+      return vd.value.to_i
+    end
+  end
+
+  def get_avio()
+    return `(atop 2 2 | grep avio |  awk '{print $15}' | paste -s -d'+' | sed 's/^/scale=3; (/' | sed 's|$|)/2|' | bc)`
+  end
+
+  def disk_percent(manager)
+    response = manager.get(["1.3.6.1.4.1.2021.9.1.9.1"])
+    response.each_varbind do |vd|
+      puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}"
+      return vd.value.to_i
+    end
+  end
+
+  def disk_load
+    return `(snmptable -v 2c -c redBorder 127.0.0.1 diskIOTable|grep ' dm-0 ' | awk '{print $7}')`.strip.to_i
+  end
+
+  def memory_total_druid_broker
+    return `(sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_broker/supervise/pid 2>/dev/null)`.strip.to_i
+  end
+
+  def memory_total_druid_coordinator
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_coordinator/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def memory_total_druid_historical
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_historical/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def memory_total_druid_realtime
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/druid_realtime/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def memory_total_kafka
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/kafka/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def memory_total_nprobe
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/nprobe/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def memory_total_postgresql
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/postgresql/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def memory_total_rbwebui
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/rb-webui/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def memory_total_zookeeper
+    return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/zookeeper/supervise/pid 2>/dev/null`.strip.to_i
+  end
+
+  def latency
+    return `nice -n 19 fping -q -s fcojriosbello 2>&1| grep 'avg round trip time'|awk '{print $1}'`.strip.to_i
+  end
+
+  def pkts_rcv
+    return 100-`sudo /bin/nice -n 19 /usr/sbin/fping -p 1 -c 10 fcojriosbello 2>&1 | tail -n 1 | awk '{print $5}' | sed 's/%.*$//' | tr '/' ' ' | awk '{print $3}'`.strip.to_i
+  end
+
+  agent_guid 'com.none.redborder'
+  agent_version '1.0.2'
+  agent_config_options :hertz # frequency of the periodic functions
+  agent_human_labels('Manager') { 'redborder' }
+
+  #host = `/opt/rb/bin/rb_get_managers.rb | grep enabled | awk {'print $1'}`.strip
+
+  def poll_cycle
+
+    SNMP::Manager.open(community: 'redBorder', host: '10.0.203.8') do |manager|
+
+      druid_parser
+
+      host = `hostname`.strip
+      memory_total = mem_total(manager)
+      memory = 100 * (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager))
+      report_metric 'CPU_PERC_' + host, 'Value', cpu(manager)
+      report_metric 'LATENCY_' + host, 'Value', latency
+      report_metric 'PKTS_RCV_' + host, 'Value', pkts_rcv
+      report_metric 'MEM_TOTAL_' + host, 'Value', memory_total
+      report_metric 'MEM_FREE_' + host, 'Value', mem_free(manager)
+      report_metric 'MEM_TOTAL_BUFFER_' + host, 'Value', mem_total_buffer(manager)
+      report_metric 'MEM_TOTAL_CACHE_' + host, 'Value', mem_total_cache(manager)
+      report_metric 'MEM_PERC_' + host, 'Value', memory/memory_total
+      # (disk utilization)avio shows the average number of milliseconds p/req
+      report_metric 'AVIO_' + host, 'Value', get_avio()
+      report_metric 'DISK_PERCENT_' + host, 'Value', disk_percent(manager)
+      report_metric 'DISK_LOAD_' + host, 'Value', disk_load()
+      report_metric 'MEMORY_DRUID_BROKER_' + host, 'Value', 100 * memory_total_druid_broker()/memory_total
+      report_metric 'MEMORY_DRUID_COORDINATOR_' + host, 'Value', 100 * memory_total_druid_coordinator()/memory_total
+      report_metric 'MEMORY_DRUID_HISTORICAL_' + host, 'Value', 100 * memory_total_druid_historical()/memory_total
+      report_metric 'MEMORY_DRUID_REALTIME_' + host, 'Value', 100 * memory_total_druid_realtime()/memory_total
+      report_metric 'MEMORY_KAFKA_' + host, 'Value', 100 * memory_total_kafka()/memory_total
+      report_metric 'MEMORY_NPROBE_' + host, 'Value', 100 * memory_total_nprobe()/memory_total
+      report_metric 'MEMORY_POSTGRESQL_' + host, 'Value', 100 * memory_total_postgresql()/memory_total
+      report_metric 'MEMORY_RBWEBUI_' + host, 'Value', 100 * memory_total_rbwebui()/memory_total
+      report_metric 'MEMORY_ZOOKEEPER_' + host, 'Value', 100 * memory_total_zookeeper()/memory_total
+
+      if !@jvm_pool_commited.nil?
+        report_metric 'jvm_pool_commited_' + host, 'Value', @jvm_pool_commited
+      elsif !@jvm_pool_init.nil?
+        report_metric 'jvm_pool_init_' + host, 'Value', @jvm_pool_init
+      elsif !@jvm_pool_used.nil?
+        report_metric 'jvm_pool_used_' + host, 'Value', @jvm_pool_used
+      elsif !@jvm_pool_max.nil?
+        report_metric 'jvm_pool_max_' + host, 'Value', @@jvm_pool_max
+      elsif !@jvm_bufferpool_used.nil?
+        report_metric 'jvm_bufferpool_used_' + host, 'Value', @jvm_bufferpool_used
+      elsif !@jvm_bufferpool_count.nil?
+        report_metric 'jvm_bufferpool_count_' + host, 'Value', @jvm_bufferpool_count
+      elsif !@jvm_bufferpool_capacity.nil?
+        report_metric 'jvm_bufferpool_capacity_' + host, 'Value', @jvm_bufferpool_capacity
+      elsif !@jvm_mem_init.nil?
+        report_metric 'jvm_bufferpool_init_' + host, 'Value', @jvm_mem_init
+      elsif !@jvm_mem_max.nil?
+        report_metric 'jvm_mem_max_' + host, 'Value',   @jvm_mem_max
+      elsif !@jvm_mem_used.nil?
+        report_metric 'jvm_mem_used_' + host, 'Value', @jvm_mem_used
+      elsif !@jvm_mem_commited.nil?
+        report_metric 'jvm_mem_commited_' + host, 'Value', @jvm_mem_commited
+      elsif !@jvm_gc_count.nil?
+        report_metric 'jvm_gc_count_' + host, 'Value', @jvm_gc_count
+      elsif !@jvm_gc_time.nil?
+        report_metric 'jvm_gc_time_' + host, 'Value', @jvm_gc_time
+      end
+  end
+end
+end
+
+#
+# Register this agent with the component.
+# The ExampleAgent is the name of the module that defines this
+# driver (the module must contain at least three classes - a
+# PollCycle, a Metric and an Agent class, as defined above).
+#
+NewRelic::Plugin::Setup.install_agent :example, ExampleAgent
+
+#
+# Launch the agent; this never returns.
+#
+NewRelic::Plugin::Run.setup_and_run
 end
