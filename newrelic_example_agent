@@ -23,7 +23,7 @@ module ExampleAgent
             metric = line.match(/"metric":"(.*)","value/)[1] unless line.match(/"metric":"(.*)","value/).nil?
             value = line.match(/"value":(\d+),"/)[1] unless line.match(/"value":(\d+),"/).nil?
 
-            puts "Metric is #{metric} and its value is #{value}"
+            # puts "Metric is #{metric} and its value is #{value}"
 
             if metric == 'jvm/pool/committed'
               @jvm_pool_commited = value
