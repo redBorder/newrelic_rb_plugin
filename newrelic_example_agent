@@ -17,11 +17,13 @@ module ExampleAgent
 
 
     def druid_parser
-      Dir.glob('*.log') do |log_file|
+      Dir.glob('/var/log/druid/*.log') do |log_file|
         File.open('/var/log/druid/realtime.log', 'r') do |file|
           file.each_line do |line| unless line.nil?
             metric = line.match(/"metric":"(.*)","value/)[1] unless line.match(/"metric":"(.*)","value/).nil?
             value = line.match(/"value":(\d+),"/)[1] unless line.match(/"value":(\d+),"/).nil?
+
+            puts "Metric is #{metric} and its value is #{value}"
 
             if metric == 'jvm/pool/committed'
               @jvm_pool_commited = value
@@ -196,29 +198,41 @@ module ExampleAgent
 
       if !@jvm_pool_commited.nil?
         report_metric 'jvm_pool_commited_' + host, 'Value', @jvm_pool_commited
-      elsif !@jvm_pool_init.nil?
+      end
+      if !@jvm_pool_init.nil?
         report_metric 'jvm_pool_init_' + host, 'Value', @jvm_pool_init
-      elsif !@jvm_pool_used.nil?
+      end
+      if !@jvm_pool_used.nil?
         report_metric 'jvm_pool_used_' + host, 'Value', @jvm_pool_used
-      elsif !@jvm_pool_max.nil?
+      end
+      if !@jvm_pool_max.nil?
         report_metric 'jvm_pool_max_' + host, 'Value', @@jvm_pool_max
-      elsif !@jvm_bufferpool_used.nil?
+      end
+      if !@jvm_bufferpool_used.nil?
         report_metric 'jvm_bufferpool_used_' + host, 'Value', @jvm_bufferpool_used
-      elsif !@jvm_bufferpool_count.nil?
+      end
+      if !@jvm_bufferpool_count.nil?
         report_metric 'jvm_bufferpool_count_' + host, 'Value', @jvm_bufferpool_count
-      elsif !@jvm_bufferpool_capacity.nil?
+      end
+      if !@jvm_bufferpool_capacity.nil?
         report_metric 'jvm_bufferpool_capacity_' + host, 'Value', @jvm_bufferpool_capacity
-      elsif !@jvm_mem_init.nil?
+      end
+      if !@jvm_mem_init.nil?
         report_metric 'jvm_bufferpool_init_' + host, 'Value', @jvm_mem_init
-      elsif !@jvm_mem_max.nil?
+      end
+      if !@jvm_mem_max.nil?
         report_metric 'jvm_mem_max_' + host, 'Value',   @jvm_mem_max
-      elsif !@jvm_mem_used.nil?
+      end
+      if !@jvm_mem_used.nil?
         report_metric 'jvm_mem_used_' + host, 'Value', @jvm_mem_used
-      elsif !@jvm_mem_commited.nil?
+      end
+      if !@jvm_mem_commited.nil?
         report_metric 'jvm_mem_commited_' + host, 'Value', @jvm_mem_commited
-      elsif !@jvm_gc_count.nil?
+      end
+      if !@jvm_gc_count.nil?
         report_metric 'jvm_gc_count_' + host, 'Value', @jvm_gc_count
-      elsif !@jvm_gc_time.nil?
+      end
+      if !@jvm_gc_time.nil?
         report_metric 'jvm_gc_time_' + host, 'Value', @jvm_gc_time
       end
   end
