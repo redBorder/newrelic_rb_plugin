@@ -9,54 +9,14 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'snmp'
-
+require_relative 'druid-parser'
 require 'newrelic_plugin'
 
 module ExampleAgent
   class Agent < NewRelic::Plugin::Agent::Base
 
 
-    def druid_parser
-      Dir.glob('/var/log/druid/*.log') do |log_file|
-        File.open('/var/log/druid/realtime.log', 'r') do |file|
-          file.each_line do |line| unless line.nil?
-            metric = line.match(/"metric":"(.*)","value/)[1] unless line.match(/"metric":"(.*)","value/).nil?
-            value = line.match(/"value":(\d+),"/)[1] unless line.match(/"value":(\d+),"/).nil?
-
-            # puts "Metric is #{metric} and its value is #{value}"
-
-            if metric == 'jvm/pool/committed'
-              @jvm_pool_commited = value
-            elsif metric == 'jvm/pool/init'
-              @jvm_pool_init = value
-            elsif metric == 'jvm/pool/used'
-              @jvm_pool_used = value
-            elsif metric == 'jvm/pool/max'
-              @jvm_pool_max = value
-            elsif metric == 'jvm/bufferpool/used'
-              @jvm_bufferpool_used = value
-            elsif metric == 'jvm/bufferpool/count'
-              @jvm_bufferpool_count = value
-            elsif metric == 'jvm/bufferpool/capacity'
-              @jvm_bufferpool_capacity = value
-            elsif metric == 'jvm/mem/init'
-              @jvm_mem_init = value
-            elsif metric == 'jvm/mem/max'
-              @jvm_mem_max = value
-            elsif metric == 'jvm/mem/used'
-              @jvm_mem_used = value
-            elsif metric == 'jvm/mem/commited'
-              @jvm_mem_commited = value
-            elsif metric == 'jvm/gc/count'
-              @jvm_gc_count = value
-            elsif metric == 'jvm/gc/time'
-              @jvm_gc_time = value
-            end
-          end
-        end
-      end
-    end
-  end
+  druid_parser
 
   def cpu(manager)
     response = manager.get(['1.3.6.1.4.1.2021.11.9.0'])
@@ -197,20 +157,75 @@ module ExampleAgent
       report_metric 'MEMORY_POSTGRESQL_' + host, 'Value', 100 * memory_total_postgresql()/memory_total
       report_metric 'MEMORY_RBWEBUI_' + host, 'Value', 100 * memory_total_rbwebui()/memory_total
       report_metric 'MEMORY_ZOOKEEPER_' + host, 'Value', 100 * memory_total_zookeeper()/memory_total
+
       #-------------------------------- DRUID METRICS -----------------------------------------------------
-      report_metric 'jvm_pool_commited_' + host, 'Value', @jvm_pool_commited unless @jvm_pool_commited.nil?
-      report_metric 'jvm_pool_init_' + host, 'Value', @jvm_pool_init unless @jvm_pool_init.nil?
-      report_metric 'jvm_pool_used_' + host, 'Value', @jvm_pool_used unless @jvm_pool_used.nil?
-      report_metric 'jvm_pool_max_' + host, 'Value', @jvm_pool_max unless @jvm_pool_max.nil?
-      report_metric 'jvm_bufferpool_used_' + host, 'Value', @jvm_bufferpool_used unless @jvm_bufferpool_used.nil?
-      report_metric 'jvm_bufferpool_count_' + host, 'Value', @jvm_bufferpool_count unless @jvm_bufferpool_count.nil?
-      report_metric 'jvm_bufferpool_capacity_' + host, 'Value', @jvm_bufferpool_capacity unless @jvm_bufferpool_capacity.nil?
-      report_metric 'jvm_bufferpool_init_' + host, 'Value', @jvm_mem_init unless @jvm_mem_init.nil?
-      report_metric 'jvm_mem_max_' + host, 'Value',   @jvm_mem_max unless @jvm_mem_max.nil?
-      report_metric 'jvm_mem_used_' + host, 'Value', @jvm_mem_used unless @jvm_mem_used.nil?
-      report_metric 'jvm_mem_commited_' + host, 'Value', @jvm_mem_commited unless @jvm_mem_commited.nil?
-      report_metric 'jvm_gc_count_' + host, 'Value', @jvm_gc_count unless @jvm_gc_count.nil?
-      report_metric 'jvm_gc_time_' + host, 'Value', @jvm_gc_time unless @jvm_gc_time.nil?
+      # Pool commited
+      report_metric 'historical_jvm_pool_commited_' + host, 'Value', @historical_jvm_pool_commited unless @historical_jvm_pool_commited.nil?
+      report_metric 'realtime_jvm_pool_commited_' + host, 'Value', @realtime_jvm_pool_commited unless @realtime_jvm_pool_commited.nil?
+      report_metric 'broker_jvm_pool_commited_' + host, 'Value', @broker_jvm_pool_commited unless @broker_jvm_pool_commited.nil?
+      report_metric 'coordinator_jvm_pool_commited_' + host, 'Value', @coordinator_jvm_pool_commited unless @coordinator_jvm_pool_commited.nil?
+      # Pool init
+      report_metric 'historical_jvm_pool_init_' + host, 'Value', @historical_jvm_pool_init unless @historical_jvm_pool_init.nil?
+      report_metric 'realtime_jvm_pool_init_' + host, 'Value', @realtime_jvm_pool_init unless @realtime_jvm_pool_init.nil?
+      report_metric 'broker_jvm_pool_init_' + host, 'Value', @broker_jvm_pool_init unless @broker_jvm_pool_init.nil?
+      report_metric 'coordinator_jvm_pool_init_' + host, 'Value', @coordinator_jvm_pool_init unless @coordinator_jvm_pool_init.nil?
+      # Pool used
+      report_metric 'historical_jvm_pool_used_' + host, 'Value', @historical_jvm_pool_used unless @historical_jvm_pool_used.nil?
+      report_metric 'realtime_jvm_pool_used_' + host, 'Value', @realtime_jvm_pool_used unless @realtime_jvm_pool_used.nil?
+      report_metric 'broker_jvm_pool_used_' + host, 'Value', @broker_jvm_pool_used unless @broker_jvm_pool_used.nil?
+      report_metric 'coordinator_jvm_pool_used_' + host, 'Value', @coordinator_jvm_pool_used unless @coordinator_jvm_pool_used.nil?
+      # Pool max
+      report_metric 'historical_jvm_pool_max_' + host, 'Value', @historical_jvm_pool_max unless @historical_jvm_pool_max.nil?
+      report_metric 'realtime_jvm_pool_max_' + host, 'Value', @realtime_jvm_pool_max unless @realtime_jvm_pool_max.nil?
+      report_metric 'broker_jvm_pool_max_' + host, 'Value', @broker_jvm_pool_max unless @broker_jvm_pool_max.nil?
+      report_metric 'coordinator_jvm_pool_max_' + host, 'Value', @coordinator_jvm_pool_max unless @coordinator_jvm_pool_max.nil?
+      # Pool used
+      report_metric 'historical_jvm_bufferpool_used_' + host, 'Value', @historical_jvm_bufferpool_used unless @historical_jvm_bufferpool_used.nil?
+      report_metric 'realtime_jvm_bufferpool_used_' + host, 'Value', @realtime_jvm_bufferpool_used unless @realtime_jvm_bufferpool_used.nil?
+      report_metric 'coordinator_jvm_bufferpool_used_' + host, 'Value', @coordinator_jvm_bufferpool_used unless @coordinator_jvm_bufferpool_used.nil?
+      report_metric 'broker__jvm_bufferpool_used_' + host, 'Value', @broker_jvm_bufferpool_used unless @broker__jvm_bufferpool_used.nil?
+
+      report_metric 'historical_jvm_bufferpool_count_' + host, 'Value', @historical_jvm_bufferpool_count unless @historical_jvm_bufferpool_count.nil?
+      report_metric 'realtime_jvm_bufferpool_count_' + host, 'Value', @realtime_jvm_bufferpool_count unless @realtime_jvm_bufferpool_count.nil?
+      report_metric 'coordinator_jvm_bufferpool_count_' + host, 'Value', @coordinator_jvm_bufferpool_count unless @coordinator_jvm_bufferpool_count.nil?
+      report_metric 'broker_jvm_bufferpool_count_' + host, 'Value', @broker_jvm_bufferpool_count unless @broker_jvm_bufferpool_count.nil?
+
+      report_metric 'historical_jvm_bufferpool_capacity_' + host, 'Value', @historical_jvm_bufferpool_capacity unless @historical_jvm_bufferpool_capacity.nil?
+      report_metric 'realtime_jvm_bufferpool_capacity_' + host, 'Value', @realtime_jvm_bufferpool_capacity unless @realtime_jvm_bufferpool_capacity.nil?
+      report_metric 'coordinator_jvm_bufferpool_capacity_' + host, 'Value', @coordinator_jvm_bufferpool_capacity unless @coordinator_jvm_bufferpool_capacity.nil?
+      report_metric 'broker_jvm_bufferpool_capacity_' + host, 'Value', @broker_jvm_bufferpool_capacity unless @broker_jvm_bufferpool_capacity.nil?
+
+      report_metric 'historical_jvm_bufferpool_init_' + host, 'Value', @historical_jvm_mem_init unless @historical_jvm_mem_init.nil?
+      report_metric 'realtime_jvm_bufferpool_init_' + host, 'Value', @realtime_jvm_mem_init unless @realtime_jvm_mem_init.nil?
+      report_metric 'coordinator_jvm_bufferpool_init_' + host, 'Value', @coordinator_jvm_mem_init unless @coordinator_jvm_mem_init.nil?
+      report_metric 'broker_jvm_bufferpool_init_' + host, 'Value', @broker_jvm_mem_init unless @broker_jvm_mem_init.nil?
+
+      report_metric 'historical_jvm_mem_max_' + host, 'Value',   @historical_jvm_mem_max unless @historical_jvm_mem_max.nil?
+      report_metric 'realtime_jvm_mem_max_' + host, 'Value',   @realtime_jvm_mem_max unless @realtime_jvm_mem_max.nil?
+      report_metric 'coordinator_jvm_mem_max_' + host, 'Value',   @coordinator_jvm_mem_max unless @coordinator_jvm_mem_max.nil?
+      report_metric 'broker_jvm_mem_max_' + host, 'Value',   @broker_jvm_mem_max unless @broker_jvm_mem_max.nil?
+
+
+      report_metric 'historical_jvm_mem_used_' + host, 'Value', @historical_jvm_mem_used unless @historical_jvm_mem_used.nil?
+      report_metric 'realtime_jvm_mem_used_' + host, 'Value', @realtime_jvm_mem_used unless @realtime_jvm_mem_used.nil?
+      report_metric 'coordinator_jvm_mem_used_' + host, 'Value', @coordinator_jvm_mem_used unless @coordinator_jvm_mem_used.nil?
+      report_metric 'broker_jvm_mem_used_' + host, 'Value', @broker_jvm_mem_used unless @broker_jvm_mem_used.nil?
+
+      report_metric 'historical_jvm_mem_commited_' + host, 'Value', @historical_jvm_mem_commited unless @historical_jvm_mem_commited.nil?
+      report_metric 'realtime_jvm_mem_commited_' + host, 'Value', @realtime_jvm_mem_commited unless @realtime_jvm_mem_commited.nil?
+      report_metric 'coordinator_jvm_mem_commited_' + host, 'Value', @coordinator_jvm_mem_commited unless @coordinator_jvm_mem_commited.nil?
+      report_metric 'broker_broker_jvm_mem_commited_' + host, 'Value', @broker_jvm_mem_commited unless @broker_jvm_mem_commited.nil?
+
+      report_metric 'historical_jvm_gc_count_' + host, 'Value', @historical_jvm_gc_count unless @historical_jvm_gc_count.nil?
+      report_metric 'realtime_jvm_gc_count_' + host, 'Value', @realtime_jvm_gc_count unless @realtime_jvm_gc_count.nil?
+      report_metric 'coordinator_jvm_gc_count_' + host, 'Value', @coordinator_jvm_gc_count unless @coordinator_jvm_gc_count.nil?
+      report_metric 'broker_jvm_gc_count_' + host, 'Value', @broker_jvm_gc_count unless @broker_jvm_gc_count.nil?
+
+      report_metric 'historical_jvm_gc_time_' + host, 'Value', @historical_jvm_gc_time unless @historical_jvm_gc_time.nil?
+      report_metric 'realtime_jvm_gc_time_' + host, 'Value', @realtime_jvm_gc_time unless @realtime_jvm_gc_time.nil?
+      report_metric 'coordinator_jvm_gc_time_' + host, 'Value', @coordinator_jvm_gc_time unless @coordinator_jvm_gc_time.nil?
+      report_metric 'broker_jvm_gc_time_' + host, 'Value', @broker_jvm_gc_time unless @broker_jvm_gc_time.nil?
+
   end
 end
 end
