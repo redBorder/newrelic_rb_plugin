@@ -15,9 +15,6 @@ require 'newrelic_plugin'
 module ExampleAgent
   class Agent < NewRelic::Plugin::Agent::Base
 
-
-  druid_parser
-
   def cpu(manager)
     response = manager.get(['1.3.6.1.4.1.2021.11.9.0'])
     response.each_varbind do |vb|
@@ -214,7 +211,7 @@ module ExampleAgent
       report_metric 'historical_jvm_mem_commited_' + host, 'Value', @historical_jvm_mem_commited unless @historical_jvm_mem_commited.nil?
       report_metric 'realtime_jvm_mem_commited_' + host, 'Value', @realtime_jvm_mem_commited unless @realtime_jvm_mem_commited.nil?
       report_metric 'coordinator_jvm_mem_commited_' + host, 'Value', @coordinator_jvm_mem_commited unless @coordinator_jvm_mem_commited.nil?
-      report_metric 'broker_broker_jvm_mem_commited_' + host, 'Value', @broker_jvm_mem_commited unless @broker_jvm_mem_commited.nil?
+      report_metric 'broker_jvm_mem_commited_' + host, 'Value', @broker_jvm_mem_commited unless @broker_jvm_mem_commited.nil?
 
       report_metric 'historical_jvm_gc_count_' + host, 'Value', @historical_jvm_gc_count unless @historical_jvm_gc_count.nil?
       report_metric 'realtime_jvm_gc_count_' + host, 'Value', @realtime_jvm_gc_count unless @realtime_jvm_gc_count.nil?
