@@ -1,11 +1,7 @@
-require_relative 'tail_f'
-#$mutex = Mutex.new
-
-$metrics = []
+load 'src/tail_f.rb'
 
 def druid_master
   threads = []
-  $i=1
   Dir.glob('/var/log/druid/*.log') do |log_file|
     puts "Started At #{Time.now} with file: " + log_file
     t = Thread.new do
@@ -17,25 +13,37 @@ def druid_master
 end
 
 def recolector
-  $metrics.each do |metric|
-    puts $metrics.size
-    +  'This: '
-    + metric[:metric] + ' '
-    + metric[:value] + ' '
-    + metric[:ttl]
+  puts $metrics.size
+
+  $metrics.each do |m|
+    puts "Metric is #{m["metric"]},
+    value: #{m["value"]},
+    service #{m["service"]},
+    ttl:  #{m["ttl"]},
+    iteration: #{m["iteration"]}"
+    if ($i - m["iteration"]) % 20 == 0 && m["ttl"] >=0
+      puts "Múltiplo de 20"
+      m["ttl"] = m["ttl"] - 1
+
+      if (m["ttl"] > 0)
+        report_metric  m["value"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+      end
+    end
   end
 end
-items = []
-one_at_a_time = Mutex.new
 
 # Show the values every 5 seconds
+=begin
 Thread.new do
-  i=1
+  $i=1
   loop do
-    puts '------------------------- i = ' + i.to_s
+    puts '------------------------- iteration = ' + $i.to_s
     recolector
     sleep 5
-    i=i+1
+    $i=$i+1
   end
 end
-druid_master
+
+$metrics = []
+=end
+#druid_master
