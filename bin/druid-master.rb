@@ -4,19 +4,20 @@ def druid_master
   threads = []
   Dir.glob('/var/log/druid/*.log') do |log_file|
     puts "Started At #{Time.now} with file: " + log_file
-    puts "--------------------------------------out---------" + ($var).to_s
+    binding.pry
+
     t = Thread.new do
       $var += 10
-      puts '-------------------------------------thread----------' + ($var).to_s
+      binding.pry
+
       log_handler(log_file)
     end
     threads << t
   end
-  threads.each { |thread| thread.join }
+#  threads.each { |thread| thread.join }
 end
 
 def recolector
-
   $metrics.each do |m|
     puts "Metric is #{m["metric"]},
     value: #{m["value"]},
@@ -29,10 +30,7 @@ def recolector
 
       if (m["ttl"] > 0)
         report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
-
-          puts file + "Service is #{service},
-           Metric is #{metric} and its value is #{value}"
-           puts $metrics.size
+        puts 'REPORTED:' + m["metric"] + '_' + m["service"] + '_' + host + 'Value: ' + m["value"]
 
       end
     end
