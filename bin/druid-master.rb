@@ -1,10 +1,13 @@
-load 'src/tail_f.rb'
+require_relative 'tail_f'
 
 def druid_master
   threads = []
   Dir.glob('/var/log/druid/*.log') do |log_file|
     puts "Started At #{Time.now} with file: " + log_file
+    puts "--------------------------------------out---------" + ($var).to_s
     t = Thread.new do
+      $var += 10
+      puts '-------------------------------------thread----------' + ($var).to_s
       log_handler(log_file)
     end
     threads << t
@@ -13,7 +16,6 @@ def druid_master
 end
 
 def recolector
-  puts $metrics.size
 
   $metrics.each do |m|
     puts "Metric is #{m["metric"]},
@@ -26,7 +28,12 @@ def recolector
       m["ttl"] = m["ttl"] - 1
 
       if (m["ttl"] > 0)
-        report_metric  m["value"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+        report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+
+          puts file + "Service is #{service},
+           Metric is #{metric} and its value is #{value}"
+           puts $metrics.size
+
       end
     end
   end
@@ -45,5 +52,6 @@ Thread.new do
 end
 
 $metrics = []
+
+druid_master
 =end
-#druid_master

@@ -6,21 +6,27 @@ def druid_parser(line, file)
       service = line.match(/"service":"(.*)","host/)[1]
     end
     unless line.match(/"metric":"(.*)","value/).nil?
-      metric = line.match(/"metric":"(.*)","value/)[1]
+      metric = (line.match(/"metric":"(.*)","value/)[1]).tr('/', '_')
     end
     unless line.match(/"value":(\d+),"/).nil?
       value = line.match(/"value":(\d+),"/)[1]
     end
-    #  unless service.nil? || value.nil?
-    #    puts file + "Service is #{service},
-    #     Metric is #{metric} and its value is #{value}"
-    #  end
+#=begin
+      unless service.nil? || value.nil?
+        puts file + "Service is #{service},
+         Metric is #{metric} and its value is #{value}"
+         puts metric + ' is reported with value: ' + value + '-------------------------------'
+         report_metric  metric + '_' + service + '_' + `hostname`.strip, 'Value', value
+
+      end
+#=end
     unless service.nil? || value.nil?
       $metrics.each do |m|
         if m["metric"] == metric && m["service"] == service
           m["value"] = value
           m["ttl"] = 3
           m["iteration"] = $i
+          puts m
         else
           $metrics << {
             "metric" => metric,
