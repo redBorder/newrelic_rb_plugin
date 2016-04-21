@@ -17,20 +17,8 @@ end
 
 def recolector
   $metrics.each do |m|
-    puts "Metric is #{m["metric"]},
-    value: #{m["value"]},
-    service #{m["service"]},
-    ttl:  #{m["ttl"]},
-    iteration: #{m["iteration"]}"
-    if ($i - m["iteration"]) % 20 == 0 && m["ttl"] >=0
-      puts "Múltiplo de 20"
-      m["ttl"] = m["ttl"] - 1
-
-      if (m["ttl"] > 0)
-        report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
-        puts 'REPORTED:' + m["metric"] + '_' + m["service"] + '_' + host + 'Value: ' + m["value"]
-
-      end
+    if (m["ttl"] == 0)
+      $metrics.delete(m)
     end
   end
 end

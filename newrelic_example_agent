@@ -21,7 +21,7 @@ module ExampleAgent
     agent_config_options :hertz, :snmp_host, :snmp_community
     agent_human_labels('Manager') { 'redborder' }
     $metrics = []
-    hash = { :metric => "test", :value => "test", :service => 'test', :ttl => 1, :iteration => 1 }
+    hash = { :metric => "test", :value => 1, :service => 'test', :ttl => 1, :iteration => 1 }
 
     # puts "Metric is #{m["metric"]},
     # value: #{m["value"]},
@@ -39,6 +39,9 @@ module ExampleAgent
     #    loop do
 
         druid_master
+        Thread.new do
+          recolector
+        end
     #  end
 
     def poll_cycle
@@ -97,7 +100,6 @@ module ExampleAgent
         report_metric 'MEMORY_ZOOKEEPER_' + host,
                       'Value', 100 * memory_total_zookeeper()/memory_total
         report_metric 'jvm_mem_init', 'Value', 1
-        binding.pry
 
         $metrics.each do |m|
           # puts "Metric is #{m["metric"]},
@@ -105,23 +107,24 @@ module ExampleAgent
           # service #{m["service"]},
           # ttl:  #{m["ttl"]},
           # iteration: #{m["iteration"]}"
-          binding.pry
-          if ($i - m["iteration"]) % 20 == 0 && m["ttl"] >=0
+          #if ($i - m["iteration"]) % 20 == 0 && m["ttl"] >=0
             # puts "Múltiplo de 20"
-            m["ttl"] = m["ttl"] - 1
+          #  m["ttl"] = m["ttl"] - 1
 
-            if (m["ttl"] > 0)
-              binding.pry
+          #  if (m["ttl"] > 0)
               puts '--------------------------------------ANTEREPORT-------------->' + m.to_s
+              puts $metrics.size
 
-              report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
-
+            unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
+                report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+                m["ttl"] -= 1
+            end
                 # puts file + "Service is #{service},
                 # Metric is #{metric} and its value is #{value}"
                  # puts $metrics.size
 
-            end
-          end
+          #  end
+        #  end
         end
       end
 

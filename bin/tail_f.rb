@@ -14,23 +14,22 @@ def druid_parser(line, file)
 #=begin
       unless service.nil? || value.nil?
         puts file + "Service is #{service},
-         Metric is #{metric} and its value is #{value}"
-         puts metric + ' is added with value: ' + value
-
-      #   report_metric  metric + '_' + service + '_' + `hostname`.strip, 'Value', value
-
+        Metric is #{metric} and its value is #{value}"
+        puts metric + ' is added with value: ' + value
       end
-#=end
- puts $metrics.size.to_s
- # binding.pry
-    unless service.nil? || value.nil?
 
-      $metrics.each do |m|
-        if m["metric"] == metric && m["service"] == service
-          m["value"] = value
-          m["ttl"] = 3
-          m["iteration"] = $i
-        else
+      unless service.nil? || value.nil?
+        found = false
+        $metrics.each do |m|
+          if m["metric"] == metric && m["service"] == service
+            found = true
+            m["value"] = value
+            m["ttl"] = 3
+            m["iteration"] = $i
+          end
+        end
+        if !found
+          puts 'Not Fouuuuuuuuuund'
           $metrics << {
             "metric" => metric,
             "service" => service,
@@ -39,7 +38,6 @@ def druid_parser(line, file)
             "iteration" => $i
           }
         end
-      end
       end
       #    puts 'metric added'
     end
