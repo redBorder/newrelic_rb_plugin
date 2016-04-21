@@ -1,35 +1,34 @@
 require 'file-tail'
 
 def druid_parser(line, file)
-  binding.pry
 
   unless line.nil?
-    unless line.match(/"metric":"(.*)","value/).nil?
+    unless line.match(/"service":"(.*)","host/).nil?
       service = line.match(/"service":"(.*)","host/)[1]
+      puts service
     end
     unless line.match(/"metric":"(.*)","value/).nil?
       metric = (line.match(/"metric":"(.*)","value/)[1]).tr('/', '_')
+      puts metric
     end
     unless line.match(/"value":(\d+),"/).nil?
       value = line.match(/"value":(\d+),"/)[1]
+      puts value
     end
-    binding.pry
 #=begin
       unless service.nil? || value.nil?
-        binding.pry
         puts file + "Service is #{service},
          Metric is #{metric} and its value is #{value}"
          puts metric + ' is added with value: ' + value
-         binding.pry
 
       #   report_metric  metric + '_' + service + '_' + `hostname`.strip, 'Value', value
 
       end
 #=end
-puts $metrics.size + 'upp                Metric sizeeeeeeeeeeeeeeeeeeee'
-
+binding.pry
+ puts $metrics.size.to_s
+binding.pry
     unless service.nil? || value.nil?
-      puts $metrics.size + 'Metric sizeeeeeeeeeeeeeeeeeeee'
 
       $metrics.each do |m|
         if m["metric"] == metric && m["service"] == service
@@ -56,11 +55,6 @@ puts $metrics.size + 'upp                Metric sizeeeeeeeeeeeeeeeeeeee'
     File.open(filename, 'r') do |log|
       log.extend(File::Tail)
       log.backward(1)
-      #  puts 'here' + $i.to_s
-      binding.pry
-
       log.tail { |line| druid_parser(line, filename) }
-      binding.pry
-
     end
   end

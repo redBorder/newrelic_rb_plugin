@@ -4,11 +4,9 @@ def druid_master
   threads = []
   Dir.glob('/var/log/druid/*.log') do |log_file|
     puts "Started At #{Time.now} with file: " + log_file
-    binding.pry
 
     t = Thread.new do
       $var += 10
-      binding.pry
 
       log_handler(log_file)
     end
