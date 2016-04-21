@@ -21,28 +21,13 @@ module ExampleAgent
     agent_config_options :hertz, :snmp_host, :snmp_community
     agent_human_labels('Manager') { 'redborder' }
     $metrics = []
-    hash = { :metric => "test", :value => 1, :service => 'test', :ttl => 1, :iteration => 1 }
-
-    # puts "Metric is #{m["metric"]},
-    # value: #{m["value"]},
-    # service #{m["service"]},
-    # ttl:  #{m["ttl"]},
-    # iteration: #{m["iteration"]}"
-    $metrics.push(hash)
     $i=1
     $var = 0
 
-  #  druid_master # this function open a thread per druid log file
-
-    #  Thread.new do
-    #    $i=1
-    #    loop do
-
-        druid_master
-        Thread.new do
-          recolector
-        end
-    #  end
+    druid_master
+    Thread.new do
+      recolector
+    end
 
     def poll_cycle
       # poll_cycle is the loop where the agent collect&report metrics
@@ -52,109 +37,80 @@ module ExampleAgent
         memory_total = mem_total(manager)
 
         memory = 100 * (memory_total
-                      - mem_free(manager)
-                      - mem_total_buffer(manager)
-                      - mem_total_cache(manager))
+        - mem_free(manager)
+        - mem_total_buffer(manager)
+        - mem_total_cache(manager))
 
         #----------------------------------- RB_MONITOR METRICS ---------------
         report_metric 'CPU_PERC_' + host,
-                      'Value', cpu(manager)
+        'Value', cpu(manager)
         report_metric 'LATENCY_' + host,
-                      'Value', latency
+        'Value', latency
         report_metric 'PKTS_RCV_' + host,
-                      'Value', pkts_rcv
+        'Value', pkts_rcv
         report_metric 'MEM_TOTAL_' + host,
-                      'Value', memory_total
+        'Value', memory_total
         report_metric 'MEM_FREE_' + host,
-                      'Value', mem_free(manager)
+        'Value', mem_free(manager)
         report_metric 'MEM_TOTAL_BUFFER_' + host,
-                      'Value', mem_total_buffer(manager)
+        'Value', mem_total_buffer(manager)
         report_metric 'MEM_TOTAL_CACHE_' + host,
-                      'Value', mem_total_cache(manager)
+        'Value', mem_total_cache(manager)
         report_metric 'MEM_PERC_' + host,
-                      'Value', memory / memory_total
+        'Value', memory / memory_total
 
         # (disk utilization)avio shows the average number of milliseconds p/req
         report_metric 'AVIO_' + host,
-                      'Value', get_avio()
+        'Value', get_avio()
         report_metric 'DISK_PERCENT_' + host,
-                      'Value', disk_percent(manager)
+        'Value', disk_percent(manager)
         report_metric 'DISK_LOAD_' + host,
-                      'Value', disk_load()
+        'Value', disk_load()
         report_metric 'MEMORY_DRUID_BROKER_' + host,
-                      'Value', 100 * memory_total_druid_broker()/memory_total
+        'Value', 100 * memory_total_druid_broker()/memory_total
         report_metric 'MEMORY_DRUID_COORDINATOR_' + host,
-                      'Value', 100 * memory_total_druid_coordinator()/memory_total
+        'Value', 100 * memory_total_druid_coordinator()/memory_total
         report_metric 'MEMORY_DRUID_HISTORICAL_' + host,
-                      'Value', 100 * memory_total_druid_historical()/memory_total
+        'Value', 100 * memory_total_druid_historical()/memory_total
         report_metric 'MEMORY_DRUID_REALTIME_' + host,
-                      'Value', 100 * memory_total_druid_realtime()/memory_total
+        'Value', 100 * memory_total_druid_realtime()/memory_total
         report_metric 'MEMORY_KAFKA_' + host,
-                      'Value', 100 * memory_total_kafka()/memory_total
+        'Value', 100 * memory_total_kafka()/memory_total
         report_metric 'MEMORY_NPROBE_' + host,
-                      'Value', 100 * memory_total_nprobe()/memory_total
+        'Value', 100 * memory_total_nprobe()/memory_total
         report_metric 'MEMORY_POSTGRESQL_' + host,
-                      'Value', 100 * memory_total_postgresql()/memory_total
+        'Value', 100 * memory_total_postgresql()/memory_total
         report_metric 'MEMORY_RBWEBUI_' + host,
-                      'Value', 100 * memory_total_rbwebui()/memory_total
+        'Value', 100 * memory_total_rbwebui()/memory_total
         report_metric 'MEMORY_ZOOKEEPER_' + host,
-                      'Value', 100 * memory_total_zookeeper()/memory_total
+        'Value', 100 * memory_total_zookeeper()/memory_total
         report_metric 'jvm_mem_init', 'Value', 1
 
         $metrics.each do |m|
-          # puts "Metric is #{m["metric"]},
-          # value: #{m["value"]},
-          # service #{m["service"]},
-          # ttl:  #{m["ttl"]},
-          # iteration: #{m["iteration"]}"
-          #if ($i - m["iteration"]) % 20 == 0 && m["ttl"] >=0
-            # puts "Múltiplo de 20"
-          #  m["ttl"] = m["ttl"] - 1
 
-          #  if (m["ttl"] > 0)
-              puts '--------------------------------------ANTEREPORT-------------->' + m.to_s
-              puts $metrics.size
+        # puts '--------------------------------------ANTEREPORT-------------->' + m.to_s
+        # puts $metrics.size
 
-            unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
-                report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
-                m["ttl"] -= 1
-            end
-                # puts file + "Service is #{service},
-                # Metric is #{metric} and its value is #{value}"
-                 # puts $metrics.size
-
-          #  end
-        #  end
+          unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
+            report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+            m["ttl"] -= 1
+          end
         end
       end
-
-    #  Thread.new do
-    #    $i=1
-    #    loop do
-          # puts '------------------------- iteration = ' + $i.to_s
-          # puts $metrics.size
-
-      #    recolector
-
-
-
-    #      sleep 5
-          $i=$i+1
-    #    end
-    #  end
+      $i=$i+1
     end
   end
 
-#
-# Register this agent with the component.
-# The ExampleAgent is the name of the module that defines this
-# driver (the module must contain at least three classes - a
-# PollCycle, a Metric and an Agent class, as defined above).
-#
-NewRelic::Plugin::Setup.install_agent :example, ExampleAgent
+  #
+  # Register this agent with the component.
+  # The ExampleAgent is the name of the module that defines this
+  # driver (the module must contain at least three classes - a
+  # PollCycle, a Metric and an Agent class, as defined above).
+  #
+  NewRelic::Plugin::Setup.install_agent :example, ExampleAgent
 
-#
-# Launch the agent; this never returns.
-#
-NewRelic::Plugin::Run.setup_and_run
+  #
+  # Launch the agent; this never returns.
+  #
+  NewRelic::Plugin::Run.setup_and_run
 end

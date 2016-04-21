@@ -5,22 +5,26 @@ def druid_parser(line, file)
   unless line.nil?
     unless line.match(/"service":"(.*)","host/).nil? || line.match(/"metric":"(.*)","value/).nil? || line.match(/"value":(\d+),"/).nil?
       service = line.match(/"service":"(.*)","host/)[1]
-      puts service
+      # if service = 'middlemanager'
+        # TODO: Change service middlemanager -> taskID
+        # source: /tmp/druid-indexing/persistent/tasks/index_*/log
+      # end
+      # puts service
       metric = (line.match(/"metric":"(.*)","value/)[1]).tr('/', '_')
-      puts metric
+      # puts metric
       value = line.match(/"value":(\d+),"/)[1]
-      puts '---------------------------------------------------->' + value
     end
-#=begin
-      unless service.nil? || value.nil?
-        puts file + "Service is #{service},
-        Metric is #{metric} and its value is #{value}"
-        puts metric + ' is added with value: ' + value
-      end
+    #  unless service.nil? || value.nil?
+    #  puts file + "Service is #{service},
+    #  Metric is #{metric} and its value is #{value}"
+    #  puts metric + ' is added with value: ' + value
+    #  end
 
       unless service.nil? || value.nil?
         found = false
         $metrics.each do |m|
+          puts $metrics.size
+          puts m.to_s
           if m["metric"] == metric && m["service"] == service
             found = true
             m["value"] = value
@@ -29,7 +33,6 @@ def druid_parser(line, file)
           end
         end
         if !found
-          puts 'Not Fouuuuuuuuuund'
           $metrics << {
             "metric" => metric,
             "service" => service,
@@ -39,7 +42,6 @@ def druid_parser(line, file)
           }
         end
       end
-      #    puts 'metric added'
     end
   end
 

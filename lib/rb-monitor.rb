@@ -1,23 +1,29 @@
 def cpu(manager)
   response = manager.get(['1.3.6.1.4.1.2021.11.9.0'])
   response.each_varbind do |vb|
-    puts "#{vb.name.to_s}  #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
-    return 100 - vb.value.to_f
+    unless vb.nil?
+      # puts "#{vb.name.to_s}
+      #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
+      return 100 - vb.value.to_f
+    end
   end
 end
 
 def mem_total(manager)
   response = manager.get(['1.3.6.1.4.1.2021.4.5.0'])
   response.each_varbind do |vb|
-    puts "#{vb.name.to_s}  #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
-    return vb.value.to_f
+    unless vb.nil?
+      # puts "#{vb.name.to_s}
+      #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
+      return vb.value.to_f
+    end
   end
 end
 
 def mem_free(manager)
   response = manager.get(['1.3.6.1.4.1.2021.4.6.0'])
   response.each_varbind do |vd|
-    puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
+    # puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
     return vd.value.to_i
   end
 end
@@ -25,7 +31,7 @@ end
 def mem_total_buffer(manager)
   response = manager.get(["1.3.6.1.4.1.2021.4.14.0"])
   response.each_varbind do |vd|
-    puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
+    # puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
     return vd.value.to_i
   end
 end
@@ -33,7 +39,7 @@ end
 def mem_total_cache(manager)
   response = manager.get(["1.3.6.1.4.1.2021.4.15.0"])
   response.each_varbind do |vd|
-    puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
+    # puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
     return vd.value.to_i
   end
 end
@@ -46,7 +52,7 @@ end
 def disk_percent(manager)
   response = manager.get(["1.3.6.1.4.1.2021.9.1.9.1"])
   response.each_varbind do |vd|
-    puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
+    # puts "#{vd.name.to_s}  #{vd.value.to_s}  #{vd.value.asn1_type}" unless vd.nil?
     return vd.value.to_i
   end
 end
