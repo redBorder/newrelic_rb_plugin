@@ -21,6 +21,14 @@ module ExampleAgent
     agent_config_options :hertz, :snmp_host, :snmp_community
     agent_human_labels('Manager') { 'redborder' }
     $metrics = []
+    hash = { :metric => "test", :value => "test", :service => 'test', :ttl => 1, :iteration => 1 }
+
+    # puts "Metric is #{m["metric"]},
+    # value: #{m["value"]},
+    # service #{m["service"]},
+    # ttl:  #{m["ttl"]},
+    # iteration: #{m["iteration"]}"
+    $metrics.push(hash)
     $i=1
     $var = 0
 
@@ -89,6 +97,32 @@ module ExampleAgent
         report_metric 'MEMORY_ZOOKEEPER_' + host,
                       'Value', 100 * memory_total_zookeeper()/memory_total
         report_metric 'jvm_mem_init', 'Value', 1
+        binding.pry
+
+        $metrics.each do |m|
+          # puts "Metric is #{m["metric"]},
+          # value: #{m["value"]},
+          # service #{m["service"]},
+          # ttl:  #{m["ttl"]},
+          # iteration: #{m["iteration"]}"
+          binding.pry
+          if ($i - m["iteration"]) % 20 == 0 && m["ttl"] >=0
+            # puts "Múltiplo de 20"
+            m["ttl"] = m["ttl"] - 1
+
+            if (m["ttl"] > 0)
+              binding.pry
+              puts '--------------------------------------ANTEREPORT-------------->' + m.to_s
+
+              report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+
+                # puts file + "Service is #{service},
+                # Metric is #{metric} and its value is #{value}"
+                 # puts $metrics.size
+
+            end
+          end
+        end
       end
 
     #  Thread.new do
@@ -98,26 +132,9 @@ module ExampleAgent
           # puts $metrics.size
 
       #    recolector
-      $metrics.each do |m|
-        # puts "Metric is #{m["metric"]},
-        # value: #{m["value"]},
-        # service #{m["service"]},
-        # ttl:  #{m["ttl"]},
-        # iteration: #{m["iteration"]}"
-        if ($i - m["iteration"]) % 20 == 0 && m["ttl"] >=0
-          # puts "Múltiplo de 20"
-          m["ttl"] = m["ttl"] - 1
 
-          if (m["ttl"] > 0)
-            report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
 
-              # puts file + "Service is #{service},
-               Metric is #{metric} and its value is #{value}"
-               # puts $metrics.size
 
-          end
-        end
-      end
     #      sleep 5
           $i=$i+1
     #    end

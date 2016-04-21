@@ -3,17 +3,13 @@ require 'file-tail'
 def druid_parser(line, file)
 
   unless line.nil?
-    unless line.match(/"service":"(.*)","host/).nil?
+    unless line.match(/"service":"(.*)","host/).nil? || line.match(/"metric":"(.*)","value/).nil? || line.match(/"value":(\d+),"/).nil?
       service = line.match(/"service":"(.*)","host/)[1]
       puts service
-    end
-    unless line.match(/"metric":"(.*)","value/).nil?
       metric = (line.match(/"metric":"(.*)","value/)[1]).tr('/', '_')
       puts metric
-    end
-    unless line.match(/"value":(\d+),"/).nil?
       value = line.match(/"value":(\d+),"/)[1]
-      puts value
+      puts '---------------------------------------------------->' + value
     end
 #=begin
       unless service.nil? || value.nil?
@@ -25,9 +21,8 @@ def druid_parser(line, file)
 
       end
 #=end
-binding.pry
  puts $metrics.size.to_s
-binding.pry
+ # binding.pry
     unless service.nil? || value.nil?
 
       $metrics.each do |m|
@@ -35,7 +30,6 @@ binding.pry
           m["value"] = value
           m["ttl"] = 3
           m["iteration"] = $i
-          puts m
         else
           $metrics << {
             "metric" => metric,
