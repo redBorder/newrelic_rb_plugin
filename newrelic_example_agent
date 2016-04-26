@@ -21,6 +21,7 @@ module ExampleAgent
     agent_config_options :hertz, :snmp_host, :snmp_community
     agent_human_labels('Manager') { 'redborder' }
     $metrics = []
+
     $i=1
     $var = 0
 
@@ -87,12 +88,8 @@ module ExampleAgent
         report_metric 'jvm_mem_init', 'Value', 1
 
         $metrics.each do |m|
-
-        # puts '--------------------------------------ANTEREPORT-------------->' + m.to_s
-        # puts $metrics.size
-
           unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
-            report_metric  m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+            report_metric  'druid_' + m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
             m["ttl"] -= 1
           end
         end
