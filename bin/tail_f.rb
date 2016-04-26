@@ -5,11 +5,13 @@ def druid_parser(line, file)
   unless line.nil?
     unless line.match(/"service":"(.*)","host/).nil? || line.match(/"metric":"(.*)","value/).nil? || line.match(/"value":(\d+),"/).nil?
       service = line.match(/"service":"(.*)","host/)[1]
-      # if service = 'middlemanager'
-        # TODO: Change service middlemanager -> taskID
-        # source: /tmp/druid-indexing/persistent/tasks/index_*/log
-      # end
-      # puts service
+      if service == 'middleManager'
+        unless line.match(/"taskId":\["(.*)"\]}\]/).nil?
+          service = line.match(/"taskId":\["(.*)"\]}\]/)[1]
+        end
+      # TODO: Change service middlemanager -> taskID
+      # source: /tmp/druid-indexing/persistent/tasks/index_*/log
+      end
       metric = (line.match(/"metric":"(.*)","value/)[1]).tr('/', '_')
       # puts metric
       value = line.match(/"value":(\d+),"/)[1]
@@ -23,8 +25,6 @@ def druid_parser(line, file)
       unless service.nil? || value.nil?
         found = false
         $metrics.each do |m|
-          puts $metrics.size
-          puts m.to_s
           if m["metric"] == metric && m["service"] == service
             found = true
             m["value"] = value
