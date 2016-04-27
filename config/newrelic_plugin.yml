@@ -26,5 +26,5 @@ newrelic:
 agents:
   # this is where configuration for agents belongs
   example:
-    snmp_host: "10.0.203.8"
+    snmp_host: "10.0.150.66"
     snmp_community: "redBorder"
