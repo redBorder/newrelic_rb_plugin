@@ -1,4 +1,4 @@
-require_relative 'tail_f'
+require_relative 'tail_f_druid'
 
 def druid_master
   threads = []
