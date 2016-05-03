@@ -10,6 +10,7 @@ require 'bundler/setup'
 require 'snmp'
 require 'pry'
 require_relative 'bin/druid-master'
+require_relative 'bin/nginx-master'
 require_relative 'lib/rb-monitor'
 require 'newrelic_plugin'
 
@@ -27,6 +28,7 @@ module ExampleAgent
     $var = 0
 
     druid_master
+    nginx_master
     Thread.new do
       recolector
     end
@@ -95,9 +97,9 @@ module ExampleAgent
           end
         end
         $nginx.each do |m|
-          unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
-            report_metric  'nginx_' + m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
-            m["ttl"] -= 1
+          unless m["status"].nil? || m["times"].nil?
+            report_metric  'nginx_' + m["status"] + '_' + host, 'Value', m["times"]
+            puts  'nginx_' + m["status"] + '_' + host + ' Value: ' + m["times"].to_s
           end
         end
       end

@@ -2,8 +2,8 @@ require_relative 'tail_f_nginx'
 
 def nginx_master
   threads = []
-  File.open('/var/log/nginx/access.log') do |log_file|
-    puts "Started At #{Time.now} with file: " + log_file
+  Dir.glob('/var/log/nginx/acc*.log') do |log_file|
+    puts "Started At #{Time.now} with file: " + log_file.to_s
     t = Thread.new do
       log_handler(log_file)
     end
