@@ -11,6 +11,7 @@ require 'snmp'
 require 'pry'
 require_relative 'bin/druid-master'
 require_relative 'bin/nginx-master'
+require_relative 'bin/chef-master'
 require_relative 'lib/rb-monitor'
 require 'newrelic_plugin'
 
@@ -23,12 +24,14 @@ module ExampleAgent
     agent_human_labels('Manager') { 'redborder' }
     $metrics = []
     $nginx = []
+    $chef = []
 
     $i=1
     $var = 0
 
     druid_master
     nginx_master
+    chef_master
     Thread.new do
       recolector
     end
@@ -102,8 +105,18 @@ module ExampleAgent
             puts  'nginx_' + m["status"] + '_' + host + ' Value: ' + m["times"].to_s
           end
         end
+        $chef.each do |m|
+          unless m["error"].nil? || m["times"].nil?
+            report_metric  'chef_' + m["error"] + '_' + host, 'Value', m["times"]
+            puts  'chef_' + m["error"] + '_' + host + ' Value: ' + m["times"].to_s
+          end
+        end
       end
-      $i=$i+1
+      $i += 1
+      if $i == 60
+        chef_recolector
+      $i = 0
+      end
     end
   end
 
