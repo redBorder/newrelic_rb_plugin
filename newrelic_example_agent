@@ -43,10 +43,7 @@ module ExampleAgent
         host = `hostname`.strip
         memory_total = mem_total(manager)
 
-        memory = 100 * (memory_total
-        - mem_free(manager)
-        - mem_total_buffer(manager)
-        - mem_total_cache(manager))
+        memory = (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager)) * 100
 
         #----------------------------------- RB_MONITOR METRICS ---------------
         report_metric 'CPU_PERC_' + host,
@@ -65,7 +62,7 @@ module ExampleAgent
         'Value', mem_total_cache(manager)
         report_metric 'MEM_PERC_' + host,
         'Value', memory / memory_total
-
+        
         # (disk utilization)avio shows the average number of milliseconds p/req
         report_metric 'AVIO_' + host,
         'Value', get_avio()
