@@ -12,6 +12,7 @@ require 'pry'
 require_relative 'bin/druid-master'
 require_relative 'bin/nginx-master'
 require_relative 'bin/chef-master'
+require_relative 'bin/check-master'
 require_relative 'lib/rb-monitor'
 require 'newrelic_plugin'
 
@@ -20,13 +21,14 @@ module ExampleAgent
 
     agent_guid 'com.none.redborder'
     agent_version '1.0.2'
-    agent_config_options :hertz, :snmp_host, :snmp_community
+    agent_config_options :hertz, :snmp_host, :snmp_community, :services
     agent_human_labels('Manager') { 'redborder' }
     $metrics = []
     $nginx = []
     $chef = []
+    $check = []
 
-    $i=1
+    $i=0
     $var = 0
 
     druid_master
@@ -40,6 +42,9 @@ module ExampleAgent
       # poll_cycle is the loop where the agent collect&report metrics
       SNMP::Manager.open(community: snmp_community, host: snmp_host) do |manager|
 
+        if ($i%20) == 0
+          check_master(services)
+        end
         host = `hostname`.strip
         memory_total = mem_total(manager)
 
@@ -62,7 +67,7 @@ module ExampleAgent
         'Value', mem_total_cache(manager)
         report_metric 'MEM_PERC_' + host,
         'Value', memory / memory_total
-        
+
         # (disk utilization)avio shows the average number of milliseconds p/req
         report_metric 'AVIO_' + host,
         'Value', get_avio()
@@ -106,6 +111,14 @@ module ExampleAgent
           unless m["error"].nil? || m["times"].nil?
             report_metric  'chef_' + m["error"] + '_' + host, 'Value', m["times"]
             puts  'chef_' + m["error"] + '_' + host + ' Value: ' + m["times"].to_s
+          end
+        end
+        if ($i%20) == 0
+          $check.each do |m|
+            unless m["service"].nil? || m["value"].nil?
+              report_metric  'check_' + m["service"] + '_' + host, 'Value', m["value"]
+              puts  'check_' + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
+            end
           end
         end
       end

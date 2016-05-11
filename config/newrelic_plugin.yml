@@ -28,3 +28,8 @@ agents:
   example:
     snmp_host: "10.0.150.66"
     snmp_community: "redBorder"
+    services:
+      - druid
+      - kafka
+      - zookeeper
+      - nginx
