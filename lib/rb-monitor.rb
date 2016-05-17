@@ -82,8 +82,7 @@ def memory_total_kafka
 end
 
 def memory_total_nprobe
-  return `sudo /opt/rb/bin/rb_mem.sh -f
-  /opt/rb/var/sv/nprobe/supervise/pid 2>/dev/null`.strip.to_i
+  return `sudo /opt/rb/bin/rb_mem.sh -f /opt/rb/var/sv/nprobe/supervise/pid 2>/dev/null`.strip.to_i
 end
 
 def memory_total_postgresql
