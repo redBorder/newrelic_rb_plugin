@@ -5,7 +5,7 @@ def nginx_master
   Dir.glob('/var/log/nginx/acc*.log') do |log_file|
     puts "Started At #{Time.now} with file: " + log_file.to_s
     t = Thread.new do
-      log_handler(log_file)
+      log_handler_nginx(log_file)
     end
     threads << t
   end

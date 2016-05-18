@@ -6,7 +6,8 @@ def druid_master
     puts "Started At #{Time.now} with file: " + log_file
     t = Thread.new do
       puts "se lanza"
-      log_handler(log_file)
+      log_handler_druid(log_file)
+      binding.pry
     end
     threads << t
   end
@@ -15,7 +16,7 @@ def druid_master
     puts "Started At #{Time.now} with file: " + log_file
     puts "aquí tb"
     t = Thread.new do
-      log_handler(log_file)
+      log_handler_druid(log_file)
     end
     threads << t
   end

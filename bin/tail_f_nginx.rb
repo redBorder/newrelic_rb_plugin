@@ -23,7 +23,7 @@ def nginx_parser(line, file)
   end
 end
 
-def log_handler(filename)
+def log_handler_nginx(filename)
   File.open(filename, 'r') do |log|
     log.extend(File::Tail)
     log.backward(1)

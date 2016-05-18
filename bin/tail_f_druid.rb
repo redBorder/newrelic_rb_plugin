@@ -43,10 +43,8 @@ def druid_parser(line, file)
     end
   end
 
-  def log_handler(filename)
-    puts here
+  def log_handler_druid(filename)
     File.open(filename, 'r') do |log|
-      puts log_handler
       log.extend(File::Tail)
       log.backward(1)
       log.tail { |line| druid_parser(line, filename) }

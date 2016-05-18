@@ -5,7 +5,7 @@ def chef_master
     log_file = '/var/log/chef-client/current'
     puts "Started At #{Time.now} with file: " + log_file.to_s
     t = Thread.new do
-      log_handler(log_file)
+      log_handler_chef(log_file)
     end
     threads << t
 end

@@ -25,7 +25,7 @@ def chef_parser(line)
   end
 end
 
-def log_handler(filename)
+def log_handler_chef(filename)
   File.open(filename, 'r') do |log|
     log.extend(File::Tail)
     log.backward(1)
