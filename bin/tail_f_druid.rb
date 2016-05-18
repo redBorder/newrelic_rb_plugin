@@ -9,18 +9,16 @@ def druid_parser(line, file)
         unless line.match(/"taskId":\["(.*)"\]}\]/).nil?
           service = line.match(/"taskId":\["(.*)"\]}\]/)[1]
         end
-      # TODO: Change service middlemanager -> taskID
-      # source: /tmp/druid-indexing/persistent/tasks/index_*/log
       end
       metric = (line.match(/"metric":"(.*)","value/)[1]).tr('/', '_')
       # puts metric
       value = line.match(/"value":(\d+),"/)[1]
     end
-    #  unless service.nil? || value.nil?
-    #  puts file + "Service is #{service},
-    #  Metric is #{metric} and its value is #{value}"
-    #  puts metric + ' is added with value: ' + value
-    #  end
+      unless service.nil? || value.nil?
+      puts file + "Service is #{service},
+      Metric is #{metric} and its value is #{value}"
+      puts metric + ' is added with value: ' + value
+      end
 
       unless service.nil? || value.nil?
         found = false
@@ -46,7 +44,9 @@ def druid_parser(line, file)
   end
 
   def log_handler(filename)
+    puts here
     File.open(filename, 'r') do |log|
+      puts log_handler
       log.extend(File::Tail)
       log.backward(1)
       log.tail { |line| druid_parser(line, filename) }

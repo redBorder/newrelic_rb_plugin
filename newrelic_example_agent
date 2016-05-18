@@ -32,8 +32,8 @@ module ExampleAgent
     $var = 0
 
     druid_master
-    nginx_master
-    chef_master
+    # nginx_master
+    # chef_master
     Thread.new do
       recolector
     end
@@ -94,11 +94,12 @@ module ExampleAgent
         report_metric 'MEMORY_ZOOKEEPER_' + host,
         'Value', 100 * memory_total_zookeeper()/memory_total
         report_metric 'jvm_mem_init', 'Value', 1
-
+=begin
         $metrics.each do |m|
           unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
             report_metric  'druid_' + m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
             m["ttl"] -= 1
+            puts  'druid_' + m["metric"]  + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
           end
         end
         $nginx.each do |m|
@@ -120,7 +121,9 @@ module ExampleAgent
               puts  'check_' + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
             end
           end
+
         end
+=end
       end
       $i += 1
       if $i == 60
