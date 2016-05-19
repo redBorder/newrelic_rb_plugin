@@ -1,5 +1,5 @@
 def cpu(manager)
-  response = manager.get(['1.3.6.1.4.1.2021.11.9.0'])
+  response = manager.get(['1.3.6.1.4.1.2021.11.11.0'])
   response.each_varbind do |vb|
     unless vb.nil?
       # puts "#{vb.name.to_s}
