@@ -4,7 +4,7 @@ def cpu(manager)
     unless vb.nil?
       # puts "#{vb.name.to_s}
       #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
-      return vb.value.to_f
+      return 100 - vb.value.to_f
     end
   end
 end
