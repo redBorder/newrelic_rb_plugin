@@ -29,3 +29,5 @@ def recolector
     end
   end
 end
+
+druid_master

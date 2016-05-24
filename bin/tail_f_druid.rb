@@ -14,39 +14,72 @@ def druid_parser(line, file)
       # puts metric
       value = line.match(/"value":(\d+),"/)[1]
     end
-      unless service.nil? || value.nil?
-      puts file + "Service is #{service},
-      Metric is #{metric} and its value is #{value}"
-      puts metric + ' is added with value: ' + value
+    unless service.nil? || value.nil?
+      found1 = false
+      found2 = false
+      ttl1 = 3
+      ttl2 = 3
+      updated_here = false
+      $metrics.each do |m|
+        if m["metric"] == metric && m["service"] == service && m["num"] == 1
+          found1 = true
+          ttl1 = m["ttl"]
+          puts "FOUND 1 Metric is #{m["metric"]} and its value is #{m["value"]}"
+        end
       end
-
-      unless service.nil? || value.nil?
-        found = false
+      if found1
         $metrics.each do |m|
-          if m["metric"] == metric && m["service"] == service
-            found = true
-            m["value"] = value
-            m["ttl"] = 3
-            m["iteration"] = $i
+          if m["metric"] == metric && m["service"] == service && m["num"] == 2
+            found2 = true
+            ttl2 = m["ttl"]
+            puts "FOUND 2 Metric is #{m["metric"]} and its value is #{m["value"]}"
           end
         end
-        if !found
-          $metrics << {
-            "metric" => metric,
-            "service" => service,
-            "value" => value,
-            "ttl" => 3,
-            "iteration" => $i
-          }
+      end
+      if found1 && found2
+        if ttl2 >= ttl1
+          $metrics.each do |m|
+            if m["metric"] == metric && m["service"] == service && m["num"] == 1
+              m["value"] = value
+              m["ttl"] = 3
+              m["iteration"] = $i
+            end
+          end
+        else
+          $metrics.each do |m|
+            if m["metric"] == metric && m["service"] == service && m["num"] == 2
+              m["value"] = value
+              m["ttl"] = 3
+              m["iteration"] = $i
+            end
+          end
         end
+      end
+      if !found1 || !found2
+        if !found1
+          num = 1
+        end
+        if found1 && !found2
+          num = 2
+        end
+        $metrics << {
+          "metric" => metric,
+          "service" => service,
+          "value" => value,
+          "ttl" => 3,
+          "iteration" => $i,
+          "num" => num
+        }
+        puts metric + ' is added with value: ' + value
       end
     end
   end
+end
 
-  def log_handler_druid(filename)
-    File.open(filename, 'r') do |log|
-      log.extend(File::Tail)
-      log.backward(1)
-      log.tail { |line| druid_parser(line, filename) }
-    end
+def log_handler_druid(filename)
+  File.open(filename, 'r') do |log|
+    log.extend(File::Tail)
+    log.backward(1)
+    log.tail { |line| druid_parser(line, filename) }
   end
+end
