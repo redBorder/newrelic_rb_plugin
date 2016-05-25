@@ -11,12 +11,14 @@ def nginx_parser(line, file)
         if m["status"] == status
           found = true
           m["times"] += 1
+          m["ttl"] = 10
         end
       end
       if !found
         $nginx << {
           "status" => status,
-          "times" => 1
+          "times" => 1,
+          "ttl" => 10
         }
       end
     end

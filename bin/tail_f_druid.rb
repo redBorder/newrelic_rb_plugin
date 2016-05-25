@@ -24,7 +24,7 @@ def druid_parser(line, file)
         if m["metric"] == metric && m["service"] == service && m["num"] == 1
           found1 = true
           ttl1 = m["ttl"]
-          puts "FOUND 1 Metric is #{m["metric"]} and its value is #{m["value"]}"
+          # puts "FOUND 1 Metric is #{m["metric"]} and its value is #{m["value"]}"
         end
       end
       if found1
@@ -32,7 +32,7 @@ def druid_parser(line, file)
           if m["metric"] == metric && m["service"] == service && m["num"] == 2
             found2 = true
             ttl2 = m["ttl"]
-            puts "FOUND 2 Metric is #{m["metric"]} and its value is #{m["value"]}"
+            # puts "FOUND 2 Metric is #{m["metric"]} and its value is #{m["value"]}"
           end
         end
       end
@@ -70,7 +70,7 @@ def druid_parser(line, file)
           "iteration" => $i,
           "num" => num
         }
-        puts metric + ' is added with value: ' + value
+        # puts metric + ' is added with value: ' + value
       end
     end
   end

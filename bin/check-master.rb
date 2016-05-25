@@ -1,5 +1,6 @@
 def check_master(services)
   services.each { |x|
+    $logger.debug(x + " service checked")
     cmd = "lib/rb_nr_check " + x
     value = `#{cmd}`
     returned = $?
