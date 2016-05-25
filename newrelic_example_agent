@@ -15,30 +15,59 @@ require_relative 'bin/chef-master'
 require_relative 'bin/check-master'
 require_relative 'lib/rb-monitor'
 require 'newrelic_plugin'
+require('logger')
 
 module ExampleAgent
   class Agent < NewRelic::Plugin::Agent::Base
 
     agent_guid 'com.none.redborder'
     agent_version '1.0.2'
-    agent_config_options :hertz, :snmp_host, :snmp_community, :services
+    agent_config_options :snmp_host, :snmp_community, :services, :log_level
     agent_human_labels('Manager') { 'redborder' }
+    $logger = Logger.new('/var/log/newrelic/plugin.log')
     $metrics = []
     $nginx = []
     $chef = []
     $check = []
 
+    #puts snmp_host
+=begin
+    if (log_level == 'DEBUG')
+      $logger.level = Logger::DEBUG
+    else
+      $logger.level = Logger::INFO
+    end
+=end
+
+    $logger.formatter = proc do |severity, datetime, progname, msg|
+      "#{severity}: #{datetime}: #{msg}\n"
+    end
+
     $i=0
     $var = 0
+    $number = 0
 
     druid_master
     nginx_master
     chef_master
+
     Thread.new do
-      recolector
+      $logger.debug("Nginx recolector launched")
+      recolector($nginx)
+    end
+
+    Thread.new do
+      $logger.debug("Druid recolector launched")
+      recolector($metrics)
     end
 
     def poll_cycle
+      
+      if (log_level == 'DEBUG')
+        $logger.level = Logger::DEBUG
+      else
+        $logger.level = Logger::INFO
+      end
       # poll_cycle is the loop where the agent collect&report metrics
       SNMP::Manager.open(community: snmp_community, host: snmp_host) do |manager|
 
@@ -95,42 +124,51 @@ module ExampleAgent
         'Value', 100 * memory_total_zookeeper()/memory_total
         report_metric 'jvm_mem_init', 'Value', 1
 
+        $logger.debug("General metrics reported")
+
         $metrics.each do |m|
           unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
             report_metric  'druid_' + m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
             m["ttl"] -= 1
-            puts  'druid_' + m["metric"]  + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
+            # puts  'druid_' + m["metric"]  + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
           end
         end
+        $logger.debug("Druid metrics reported")
         $nginx.each do |m|
           unless m["status"].nil? || m["times"].nil?
             report_metric  'nginx_' + m["status"] + '_' + host, 'Value', m["times"]
-            puts  'nginx_' + m["status"] + '_' + host + ' Value: ' + m["times"].to_s
+            m["ttl"] -= 1
+            # puts  'nginx_' + m["status"] + '_' + host + ' Value: ' + m["times"].to_s
           end
         end
+        $logger.debug("Nginx metrics reported")
         $chef.each do |m|
           unless m["error"].nil? || m["times"].nil?
             report_metric  'chef_' + m["error"] + '_' + host, 'Value', m["times"]
-            puts  'chef_' + m["error"] + '_' + host + ' Value: ' + m["times"].to_s
+            # puts  'chef_' + m["error"] + '_' + host + ' Value: ' + m["times"].to_s
           end
         end
+        $logger.debug("Chef metrics reported")
         if ($i%20) == 0
           $check.each do |m|
             unless m["service"].nil? || m["value"].nil?
               report_metric  'check_' + m["service"] + '_' + host, 'Value', m["value"]
-              puts  'check_' + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
+              # puts  'check_' + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
             end
           end
-
+          $logger.debug("Checks metrics reported")
         end
 
       end
       $i += 1
+      $number+=1
       if $i == 60
         chef_recolector
+        $logger.debug("Chef recolector executed")
       $i = 0
       end
     end
+    $logger.info("Pollcycle number " + $number.to_s + " finished ")
   end
 
   #
