@@ -35,3 +35,7 @@ agents:
       - kafka
       - zookeeper
       - nginx" > config/newrelic_plugin.yml
+      
+if [[ $? ]]; then
+  cp rb_nr_agent /etc/rc.d/init.d/
+fi
