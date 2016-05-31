@@ -10,7 +10,7 @@
 
 RETVAL=0
 prog="rb_nr_agent"
-executable="newrelic_example_agent"
+executable="newrelic_redborder_agent"
 LOCKFILE=/var/lock/subsys/$prog
 
 . /etc/init.d/functions
@@ -20,7 +20,7 @@ start() {
           echo "$prog is currently running"
         else
           echo -n "Starting $prog: "
-          /opt/newrelic/newrelic/newrelic_example_agent > /dev/null &
+          /opt/newrelic_rb_plugin/newrelic_redborder_agent > /dev/null &
           RETVAL=$?
           [ $RETVAL -eq 0 ] && touch $LOCKFILE && echo_success
           echo
