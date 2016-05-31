@@ -1,0 +1,186 @@
+#! /usr/bin/env ruby
+
+#
+# This is an example agent which generates synthetic data.
+# using the Unix epoch as the base.
+#
+
+require 'rubygems'
+require 'bundler/setup'
+require 'snmp'
+require 'pry'
+require_relative 'bin/druid-master'
+require_relative 'bin/nginx-master'
+require_relative 'bin/chef-master'
+require_relative 'bin/check-master'
+require_relative 'lib/rb-monitor'
+require 'newrelic_plugin'
+require('logger')
+
+module RedborderAgent
+  class Agent < NewRelic::Plugin::Agent::Base
+
+    agent_guid 'com.none.redborder'
+    agent_version '1.0.2'
+    agent_config_options :snmp_host, :snmp_community, :services, :log_level
+    agent_human_labels('Manager') { 'redborder' }
+    $logger = Logger.new('/var/log/newrelic/plugin.log')
+    $metrics = []
+    $nginx = []
+    $chef = []
+    $check = []
+
+    #puts snmp_host
+=begin
+    if (log_level == 'DEBUG')
+      $logger.level = Logger::DEBUG
+    else
+      $logger.level = Logger::INFO
+    end
+=end
+
+    $logger.formatter = proc do |severity, datetime, progname, msg|
+      "#{severity}: #{datetime}: #{msg}\n"
+    end
+
+    $i=0
+    $var = 0
+    $number = 0
+
+    druid_master
+    nginx_master
+    chef_master
+
+    Thread.new do
+      $logger.debug("Nginx recolector launched")
+      recolector($nginx)
+    end
+
+    Thread.new do
+      $logger.debug("Druid recolector launched")
+      recolector($metrics)
+    end
+
+    def poll_cycle
+
+      if (log_level == 'DEBUG')
+        $logger.level = Logger::DEBUG
+      else
+        $logger.level = Logger::INFO
+      end
+      # poll_cycle is the loop where the agent collect&report metrics
+      SNMP::Manager.open(community: snmp_community, host: snmp_host) do |manager|
+
+        if ($i%20) == 0
+          check_master(services)
+        end
+        host = `hostname`.strip
+        memory_total = mem_total(manager)
+
+        memory = (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager)) * 100
+
+        #----------------------------------- RB_MONITOR METRICS ---------------
+        report_metric 'CPU_PERC_' + host,
+        'Value', cpu(manager)
+        report_metric 'LATENCY_' + host,
+        'Value', latency
+        report_metric 'PKTS_RCV_' + host,
+        'Value', pkts_rcv
+        report_metric 'MEM_TOTAL_' + host,
+        'Value', memory_total
+        report_metric 'MEM_FREE_' + host,
+        'Value', mem_free(manager)
+        report_metric 'MEM_TOTAL_BUFFER_' + host,
+        'Value', mem_total_buffer(manager)
+        report_metric 'MEM_TOTAL_CACHE_' + host,
+        'Value', mem_total_cache(manager)
+        report_metric 'MEM_PERC_' + host,
+        'Value', memory / memory_total
+
+        # (disk utilization)avio shows the average number of milliseconds p/req
+        report_metric 'AVIO_' + host,
+        'Value', get_avio()
+        report_metric 'DISK_PERCENT_' + host,
+        'Value', disk_percent(manager)
+        report_metric 'DISK_LOAD_' + host,
+        'Value', disk_load()
+        report_metric 'MEMORY_DRUID_BROKER_' + host,
+        'Value', 100 * memory_total_druid_broker()/memory_total
+        report_metric 'MEMORY_DRUID_COORDINATOR_' + host,
+        'Value', 100 * memory_total_druid_coordinator()/memory_total
+        report_metric 'MEMORY_DRUID_HISTORICAL_' + host,
+        'Value', 100 * memory_total_druid_historical()/memory_total
+        report_metric 'MEMORY_DRUID_REALTIME_' + host,
+        'Value', 100 * memory_total_druid_realtime()/memory_total
+        report_metric 'MEMORY_KAFKA_' + host,
+        'Value', 100 * memory_total_kafka()/memory_total
+        report_metric 'MEMORY_NPROBE_' + host,
+        'Value', 100 * memory_total_nprobe()/memory_total
+        report_metric 'MEMORY_POSTGRESQL_' + host,
+        'Value', 100 * memory_total_postgresql()/memory_total
+        report_metric 'MEMORY_RBWEBUI_' + host,
+        'Value', 100 * memory_total_rbwebui()/memory_total
+        report_metric 'MEMORY_ZOOKEEPER_' + host,
+        'Value', 100 * memory_total_zookeeper()/memory_total
+        report_metric 'jvm_mem_init', 'Value', 1
+
+        $logger.debug("General metrics reported")
+
+        $metrics.each do |m|
+          unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
+            report_metric  'druid_' + m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
+            m["ttl"] -= 1
+            # puts  'druid_' + m["metric"]  + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
+          end
+        end
+        $logger.debug("Druid metrics reported")
+        $nginx.each do |m|
+          unless m["status"].nil? || m["times"].nil?
+            report_metric  'nginx_' + m["status"] + '_' + host, 'Value', m["times"]
+            m["ttl"] -= 1
+            # puts  'nginx_' + m["status"] + '_' + host + ' Value: ' + m["times"].to_s
+          end
+        end
+        $logger.debug("Nginx metrics reported")
+        $chef.each do |m|
+          unless m["error"].nil? || m["times"].nil?
+            report_metric  'chef_' + m["error"] + '_' + host, 'Value', m["times"]
+            # puts  'chef_' + m["error"] + '_' + host + ' Value: ' + m["times"].to_s
+          end
+        end
+        $logger.debug("Chef metrics reported")
+        if ($i%20) == 0
+          $check.each do |m|
+            unless m["service"].nil? || m["value"].nil?
+              report_metric  'check_' + m["service"] + '_' + host, 'Value', m["value"]
+              # puts  'check_' + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
+            end
+          end
+          $logger.debug("Checks metrics reported")
+        end
+
+      end
+      $i += 1
+      $number+=1
+      if $i == 60
+        chef_recolector
+        $logger.debug("Chef recolector executed")
+      $i = 0
+      end
+    end
+    $logger.info("Pollcycle number " + $number.to_s + " finished ")
+  end
+
+  #
+  # Register this agent with the component.
+  # The ExampleAgent is the name of the module that defines this
+  # driver (the module must contain at least three classes - a
+  # PollCycle, a Metric and an Agent class, as defined above).
+  #
+  NewRelic::Plugin::Setup.install_agent :redborder, RedborderAgent
+
+  #
+  # Launch the agent; this never returns.
+  #
+  NewRelic::Plugin::Run.setup_and_run
+end
