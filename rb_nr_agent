@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+#       copy this script to /etc/rc.d/init.d/rb_nr_agent
+#
+#
+# chkconfig: 345 70 30
+# description: NewRelic Agent Plugin for redborder platform
+# processname: rb_nr_agent
+#
+
+RETVAL=0
+prog="rb_nr_agent"
+executable="newrelic_example_agent"
+LOCKFILE=/var/lock/subsys/$prog
+
+. /etc/init.d/functions
+
+start() {
+        if [ -f $LOCKFILE ]; then
+          echo "$prog is currently running"
+        else
+          echo -n "Starting $prog: "
+          /opt/newrelic/newrelic/newrelic_example_agent > /dev/null &
+          RETVAL=$?
+          [ $RETVAL -eq 0 ] && touch $LOCKFILE && echo_success
+          echo
+        fi
+        return $RETVAL
+}
+stop() {
+        echo -n "Shutting down $prog: "
+        if [ -f $LOCKFILE  ] ; then
+          PID=$(ps aux | grep $executable | grep -v grep | awk {'print $2'})
+          kill $PID
+          rm -f $LOCKFILE
+        else
+          echo_failure; failure
+        fi
+        RETVAL=$?
+        [ $RETVAL -eq 0 ] && echo_success
+        echo
+        return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        if [ -f $LOCKFILE ]; then
+          echo "$prog is running"
+        else
+          echo "$prog is stopped"
+        fi
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: <servicename> {start|stop|status}"
+        exit 1
+        ;;
+esac
+exit $?
