@@ -19,7 +19,7 @@ module RedborderAgent
     agent_guid 'com.none.redborder'
     agent_version '1.0.2'
     agent_config_options :snmp_host, :snmp_community, :services
-    agent_human_labels('Manager') { 'redborder' }
+    agent_human_labels('Manager') { `hostname`.strip.to_s }
     $logger = Logger.new('/var/log/newrelic/plugin.log')
     argv = Rationalist.parse(ARGV)
     # ./newrelic_redborder_agent --log debug
