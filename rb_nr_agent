@@ -22,7 +22,10 @@ start() {
           echo -n "Starting $prog: "
           /opt/newrelic_rb_plugin/newrelic_redborder_agent > /dev/null &
           RETVAL=$?
-          [ $RETVAL -eq 0 ] && touch $LOCKFILE && echo_success
+          if [ $RETVAL -eq 0 ]
+           touch $LOCKFILE
+           echo_success
+          fi
           echo
         fi
         return $RETVAL
