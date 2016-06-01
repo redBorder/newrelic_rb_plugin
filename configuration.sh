@@ -1,5 +1,7 @@
 #!/bin/sh
 
+mkdir config
+
 echo "# Please make sure to update the license_key information with the license key for your New Relic
 # account.
 #
@@ -34,7 +36,8 @@ agents:
       - druid
       - kafka
       - zookeeper
-      - nginx" > config/newrelic_plugin.yml
+      - nginx
+      " > config/newrelic_plugin.yml
 
 if [[ $? ]]; then
   bundle install
