@@ -20,7 +20,8 @@ start() {
           echo "$prog is currently running"
         else
           echo -n "Starting $prog: "
-          /opt/newrelic_rb_plugin/newrelic_redborder_agent > /dev/null &
+          cd /opt/newrelic_rb_plugin/
+          ./newrelic_redborder_agent > /dev/null &
           RETVAL=$?
           if [ $RETVAL -eq 0 ]; then
            touch $LOCKFILE
