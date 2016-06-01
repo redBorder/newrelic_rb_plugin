@@ -22,9 +22,11 @@ start() {
           echo -n "Starting $prog: "
           /opt/newrelic_rb_plugin/newrelic_redborder_agent > /dev/null &
           RETVAL=$?
-          if [ $RETVAL -eq 0 ]
+          if [ $RETVAL -eq 0 ]; then
            touch $LOCKFILE
            echo_success
+          else
+            rm -rf $LOCKFILE
           fi
           echo
         fi
@@ -33,7 +35,7 @@ start() {
 stop() {
         echo -n "Shutting down $prog: "
         if [ -f $LOCKFILE  ] ; then
-          PID=$(ps aux | grep $executable | grep -v grep | awk {'print $2'})
+          PID=$(ps aux | grep $executable | grep -v grep | awk {'print $2'} > /dev/null)
           kill $PID
           rm -f $LOCKFILE
         else
