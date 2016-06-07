@@ -22,12 +22,13 @@ The installation process consists on:
 1. Create a free account in NewRelic
 2. Copy your License Key (you can find it in your account settings)
 3. Clone this repo:
-      ```sh
-        $ git clone https://github.com/franrios/newrelic_rb_plugin.git
-        $ cd newrelic_rb_plugin
-      ```
+
+```sh
+$ git clone https://github.com/franrios/newrelic_rb_plugin.git
+$ cd newrelic_rb_plugin
+```
 4. Configure the agent as follow:
-  ```sh
-  $ ./configuration.sh LICENSE_KEY INSTANCE_IP
-  $ nohup ./newrelic_redborder_agent &
-  ```
+```sh
+$ ./configuration.sh LICENSE_KEY INSTANCE_IP
+$ nohup ./newrelic_redborder_agent &
+```
