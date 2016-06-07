@@ -1,6 +1,7 @@
 # Redborder Platform Plugin Agent for NewRelic
 ---
 ![alt text](http://www.aeiciberseguridad.es/imagenes%5Cdescargas%5C7492047.jpg "Redborder")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ![alt text](https://www.drupal.org/files/styles/grid-3/public/NewRelic.png?itok=tmr3C7yP "NewRelic")
 
 #### Version 1.0.1
