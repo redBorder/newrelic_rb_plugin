@@ -1,7 +1,7 @@
 # Redborder Platform Plugin Agent for NewRelic
 ---
 ![alt text](http://www.aeiciberseguridad.es/imagenes%5Cdescargas%5C7492047.jpg "Redborder")
-___
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ![alt text](https://www.drupal.org/files/styles/grid-3/public/NewRelic.png?itok=tmr3C7yP "NewRelic")
 
 #### Version 1.0.1
@@ -14,18 +14,24 @@ You can monitor:
   - Nginx (Status code received)
   - Chef (Configuration errors)
   - Health checks for: Kafka, Zookeeper, Druid, Hadoop, Memcached, Nprobe,            PostgreSQL, Riak and many more.
-  ### Installation
+
+### Installation
 ---
 The installation process consists on:
-    1. Create a free account in NewRelic
-    2. Copy your License Key (you can find it in your account settings)
-    3. Clone this repo:
+
+1. Create a free account in NewRelic
+2. Copy your License Key (you can find it in your account settings)
+3. Clone this repo:
+
 ```sh
 $ git clone https://github.com/franrios/newrelic_rb_plugin.git
 $ cd newrelic_rb_plugin
 ```
-4. Configure the agent as follow:
+### Configuration
+---
+1. Configure the agent as follow:
 ```sh
 $ ./configuration.sh LICENSE_KEY INSTANCE_IP
 $ nohup ./newrelic_redborder_agent &
 ```
+Wait a few minutes and you will see the angent automatically added to your plugin section in NewRelic platform
