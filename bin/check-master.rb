@@ -21,6 +21,7 @@ def check_master(services)
         }
       end
     else
+      puts x.to_s + ' service doesn\'t have a check script'
       next
     end
   }
