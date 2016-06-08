@@ -1,12 +1,11 @@
 def check_master(services)
   services.each { |x|
     $logger.debug(x + ' service checked')
-    # rb_check -s nginx | grep FAILED | wc -l
-    cmd = 'rb_check -s ' + x + ' 2> /dev/null | grep FAILED | wc -l'
+    cmd = 'cat /tmp/rb_check.lock 2> /dev/null | xargs kill -9 2> /dev/null;
+    rb_check -s ' + x + ' 2> /dev/null | grep FAILED | wc -l'
     value = `#{cmd}`
-    # puts 'service is ' + x + ' value: ' + value
-
-    status = (value != '0') ? 0 : 1
+    status = (value.strip != '0') ? 0 : 1
+    # puts 'service is ' + x + ' value: ' + value + ' then status is ' + status.to_s
     found = false
 
     $check.each do |m|
