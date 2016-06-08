@@ -22,7 +22,7 @@ module RedborderAgent
     $logger = Logger.new('/var/log/newrelic/plugin.log')
     argv = Rationalist.parse(ARGV)
     # ./newrelic_redborder_agent --log debug
-    if (argv[:log] == "debug")
+    if (argv[:log] == 'debug')
       $logger.level = Logger::DEBUG
     else
       $logger.level = Logger::INFO
@@ -33,7 +33,7 @@ module RedborderAgent
     $check = []
 
     $logger.formatter = proc do |severity, datetime, progname, msg|
-      "#{severity}: #{datetime}: #{msg}\n"
+      '#{severity}: #{datetime}: #{msg}\n'
     end
 
     $i=0
@@ -45,12 +45,12 @@ module RedborderAgent
     chef_master
 
     Thread.new do
-      $logger.debug("Nginx recolector launched")
+      $logger.debug('Nginx recolector launched')
       recolector($nginx)
     end
 
     Thread.new do
-      $logger.debug("Druid recolector launched")
+      $logger.debug('Druid recolector launched')
       recolector($metrics)
     end
 
@@ -111,53 +111,51 @@ module RedborderAgent
         'Value', 100 * memory_total_zookeeper()/memory_total
         report_metric 'jvm_mem_init', 'Value', 1
 
-        $logger.debug("General metrics reported")
+        $logger.debug('General metrics reported')
 
         $metrics.each do |m|
-          unless m["metric"].nil? || m["service"].nil? || m["value"].nil?
-            report_metric  'druid_' + m["metric"] + '_' + m["service"] + '_' + host, 'Value', m["value"]
-            m["ttl"] -= 1
-            # puts  'druid_' + m["metric"]  + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
+          unless m['metric'].nil? || m['service'].nil? || m['value'].nil?
+            report_metric  'druid_' + m['metric'] + '_' + m['service'] + '_' + host, 'Value', m['value']
+            m['ttl'] -= 1
+            # puts  'druid_' + m['metric']  + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
           end
         end
-        $logger.debug("Druid metrics reported")
+        $logger.debug('Druid metrics reported')
         $nginx.each do |m|
-          unless m["status"].nil? || m["times"].nil?
-            report_metric  'nginx_' + m["status"] + '_' + host, 'Value', m["times"]
-            m["ttl"] -= 1
+          unless m['status'].nil? || m['times'].nil?
+            report_metric  'nginx_' + m['status'] + '_' + host, 'Value', m['times']
+            m['ttl'] -= 1
             if $i%60 == 0
-              nginx.delete(m)
+              $nginx.delete(m)
             end
-            # puts  'nginx_' + m["status"] + '_' + host + ' Value: ' + m["times"].to_s
+            # puts  'nginx_' + m['status'] + '_' + host + ' Value: ' + m['times'].to_s
           end
         end
-        $logger.debug("Nginx metrics reported")
+        $logger.debug('Nginx metrics reported')
         $chef.each do |m|
-          unless m["error"].nil? || m["times"].nil?
-            report_metric  'chef_' + m["error"] + '_' + host, 'Value', m["times"]
-            # puts  'chef_' + m["error"] + '_' + host + ' Value: ' + m["times"].to_s
+          unless m['error'].nil? || m['times'].nil?
+            report_metric  'chef_' + m['error'] + '_' + host, 'Value', m['times']
+            # puts  'chef_' + m['error'] + '_' + host + ' Value: ' + m['times'].to_s
           end
         end
-        $logger.debug("Chef metrics reported")
-        if ($i%20) == 0
-          $check.each do |m|
-            unless m["service"].nil? || m["value"].nil?
-              report_metric  'check_' + m["service"] + '_' + host, 'Value', m["value"]
-              # puts  'check_' + m["service"] + '_' + host + ' Value: ' + m["value"].to_s
-            end
-          end
-          $logger.debug("Checks metrics reported")
-        end
+        $logger.debug('Chef metrics reported')
 
+        $check.each do |m|
+          unless m['service'].nil? || m['value'].nil?
+            report_metric  'check_' + m['service'] + '_' + host, 'Value', m['value']
+            puts  'check_' + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
+          end
+        end
+        $logger.debug('Checks metrics reported')
       end
       $i += 1
       $number+=1
       if $i%60 == 0
         chef_recolector
-        $logger.debug("Chef recolector executed")
+        $logger.debug('Chef recolector executed')
       end
     end
-    $logger.info("Pollcycle number " + $number.to_s + " finished ")
+    $logger.info('Pollcycle number ' + $number.to_s + ' finished ')
   end
 
   #
