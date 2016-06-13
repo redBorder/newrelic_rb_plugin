@@ -65,14 +65,14 @@ module RedborderAgent
         memory_total = mem_total(manager)
 
         memory = (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager)) * 100
-
+# binding.pry
         #----------------------------------- RB_MONITOR METRICS ---------------
         report_metric 'CPU_PERC_' + host,
         'Value', cpu(manager)
         report_metric 'LATENCY_' + host,
-        'Value', latency
+        'Value', latency(host)
         report_metric 'PKTS_RCV_' + host,
-        'Value', pkts_rcv
+        'Value', pkts_rcv(host)
         report_metric 'MEM_TOTAL_' + host,
         'Value', memory_total
         report_metric 'MEM_FREE_' + host,
@@ -112,7 +112,7 @@ module RedborderAgent
         report_metric 'jvm_mem_init', 'Value', 1
 
         $logger.debug('General metrics reported')
-
+# binding.pry
         $metrics.each do |m|
           unless m['metric'].nil? || m['service'].nil? || m['value'].nil?
             report_metric  'druid_' + m['metric'] + '_' + m['service'] + '_' + host, 'Value', m['value']
@@ -125,9 +125,10 @@ module RedborderAgent
           unless m['status'].nil? || m['times'].nil?
             report_metric  'nginx_' + m['status'] + '_' + host, 'Value', m['times']
             m['ttl'] -= 1
-            if $i%60 == 0
-              $nginx.delete(m)
-            end
+            ## binding.pry
+          #  if $i%60 == 0
+          #    $nginx.delete(m)
+          #  end
             # puts  'nginx_' + m['status'] + '_' + host + ' Value: ' + m['times'].to_s
           end
         end
@@ -148,12 +149,14 @@ module RedborderAgent
         end
         $logger.debug('Checks metrics reported')
       end
+      # binding.pry
       $i += 1
       $number+=1
       if $i%60 == 0
         chef_recolector
         $logger.debug('Chef recolector executed')
       end
+      # binding.pry
     end
     $logger.info('Pollcycle number ' + $number.to_s + ' finished ')
   end
