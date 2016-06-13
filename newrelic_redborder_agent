@@ -1,4 +1,5 @@
 #! /usr/bin/env ruby
+
 require 'rubygems'
 require 'bundler/setup'
 require 'snmp'
@@ -144,7 +145,7 @@ module RedborderAgent
         $check.each do |m|
           unless m['service'].nil? || m['value'].nil?
             report_metric  'check_' + m['service'] + '_' + host, 'Value', m['value']
-            puts  'check_' + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
+            # ∫puts  'check_' + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
           end
         end
         $logger.debug('Checks metrics reported')
