@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mkdir config
+mkdir config 2> /dev/null
 
 echo "# Please make sure to update the license_key information with the license key for your New Relic
 # account.
@@ -30,13 +30,33 @@ newrelic:
 agents:
   # this is where configuration for agents belongs
   redborder:
-    snmp_host: \"$2\"
+    snmp_host: \"127.0.0.1\"
     snmp_community: \"redBorder\"
     services:
-      - druid
+      - chef-client
+      - druid_coordinator
+      - druid_historical
+      - druid_broker
+      - druid_overlord
       - kafka
       - zookeeper
+      - rb-webui
+      - rb-workers
+      - erchef
+      - chef-solr
+      - chef-expander
+      - rabbitmq
+      - postgresql
       - nginx
+      - riak-cs
+      - riak
+      - hadoop_resourcemanager
+      - rb-monitor
+      - nprobe
+      - memcached
+      - rb-sociald
+      - rb-discover
+      - rb-snmp
       " > config/newrelic_plugin.yml
 
 if [[ $? ]]; then
