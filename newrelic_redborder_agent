@@ -57,16 +57,20 @@ module RedborderAgent
 
     def poll_cycle
       # poll_cycle is the loop where the agent collect&report metrics
-      SNMP::Manager.open(community: snmp_community, host: snmp_host) do |manager|
+      host = `hostname`.strip
 
-        if ($i%20) == 0
-          check_master(services)
-        end
-        host = `hostname`.strip
+      SNMP::Manager.open(community: snmp_community, host: snmp_host) do |manager|
         memory_total = mem_total(manager)
 
-        memory = (memory_total - mem_free(manager) - mem_total_buffer(manager) - mem_total_cache(manager)) * 100
-# binding.pry
+        services.each do |service|
+          check_master(service)
+        end
+
+        memory = (memory_total -
+        mem_free(manager) -
+        mem_total_buffer(manager) -
+        mem_total_cache(manager)) * 100
+
         #----------------------------------- RB_MONITOR METRICS ---------------
         report_metric 'CPU_PERC_' + host,
         'Value', cpu(manager)
@@ -87,81 +91,76 @@ module RedborderAgent
 
         # (disk utilization)avio shows the average number of milliseconds p/req
         report_metric 'AVIO_' + host,
-        'Value', get_avio()
+                      'Value', get_avio()
         report_metric 'DISK_PERCENT_' + host,
-        'Value', disk_percent(manager)
+                      'Value', disk_percent(manager)
         report_metric 'DISK_LOAD_' + host,
-        'Value', disk_load()
+                      'Value', disk_load()
         report_metric 'MEMORY_DRUID_BROKER_' + host,
-        'Value', 100 * memory_total_druid_broker()/memory_total
+                      'Value', 100 * memory_total_druid_broker()/memory_total
         report_metric 'MEMORY_DRUID_COORDINATOR_' + host,
-        'Value', 100 * memory_total_druid_coordinator()/memory_total
+                      'Value', 100 * memory_total_druid_coordinator()/memory_total
         report_metric 'MEMORY_DRUID_HISTORICAL_' + host,
-        'Value', 100 * memory_total_druid_historical()/memory_total
+                      'Value', 100 * memory_total_druid_historical()/memory_total
         report_metric 'MEMORY_DRUID_REALTIME_' + host,
-        'Value', 100 * memory_total_druid_realtime()/memory_total
+                      'Value', 100 * memory_total_druid_realtime()/memory_total
         report_metric 'MEMORY_KAFKA_' + host,
-        'Value', 100 * memory_total_kafka()/memory_total
+                      'Value', 100 * memory_total_kafka()/memory_total
         report_metric 'MEMORY_NPROBE_' + host,
-        'Value', 100 * memory_total_nprobe()/memory_total
+                      'Value', 100 * memory_total_nprobe()/memory_total
         report_metric 'MEMORY_POSTGRESQL_' + host,
-        'Value', 100 * memory_total_postgresql()/memory_total
+                      'Value', 100 * memory_total_postgresql()/memory_total
         report_metric 'MEMORY_RBWEBUI_' + host,
-        'Value', 100 * memory_total_rbwebui()/memory_total
+                      'Value', 100 * memory_total_rbwebui()/memory_total
         report_metric 'MEMORY_ZOOKEEPER_' + host,
-        'Value', 100 * memory_total_zookeeper()/memory_total
-        report_metric 'jvm_mem_init', 'Value', 1
-
-        $logger.debug('General metrics reported')
-# binding.pry
-        $metrics.each do |m|
-          unless m['metric'].nil? || m['service'].nil? || m['value'].nil?
-            report_metric  'druid_' + m['metric'] + '_' + m['service'] + '_' + host, 'Value', m['value']
-            m['ttl'] -= 1
-            # puts  'druid_' + m['metric']  + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
-          end
-        end
-        $logger.debug('Druid metrics reported')
-        $nginx.each do |m|
-          unless m['status'].nil? || m['times'].nil?
-            report_metric  'nginx_' + m['status'] + '_' + host, 'Value', m['times']
-            m['ttl'] -= 1
-            ## binding.pry
-          #  if $i%60 == 0
-          #    $nginx.delete(m)
-          #  end
-            # puts  'nginx_' + m['status'] + '_' + host + ' Value: ' + m['times'].to_s
-          end
-        end
-        $logger.debug('Nginx metrics reported')
-        $chef.each do |m|
-          unless m['error'].nil? || m['times'].nil?
-            report_metric  'chef_' + m['error'] + '_' + host, 'Value', m['times']
-            # puts  'chef_' + m['error'] + '_' + host + ' Value: ' + m['times'].to_s
-          end
-        end
-        $logger.debug('Chef metrics reported')
-
-        $check.each do |m|
-          unless m['service'].nil? || m['value'].nil?
-            report_metric  'check_' + m['service'] + '_' + host, 'Value', m['value']
-            # ∫puts  'check_' + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
-          end
-        end
-        $logger.debug('Checks metrics reported')
+                      'Value', 100 * memory_total_zookeeper()/memory_total
+        report_metric 'jvm_mem_init',
+                      'Value', 1
       end
-      # binding.pry
+      $logger.debug('General metrics reported')
+
+      $metrics.each do |m|
+        unless m['metric'].nil? || m['service'].nil? || m['value'].nil?
+          report_metric  'druid_' +
+                          m['metric'] + '_' + m['service'] + '_' + host, 'Value', m['value']
+          m['ttl'] -= 1
+          # puts  'druid_' + m['metric']  + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
+        end
+      end
+      $logger.debug('Druid metrics reported')
+      $nginx.each do |m|
+        unless m['status'].nil? || m['times'].nil?
+          report_metric  'nginx_' + m['status'] + '_' + host, 'Value', m['times']
+          m['ttl'] -= 1
+          # puts  'nginx_' + m['status'] + '_' + host + ' Value: ' + m['times'].to_s
+        end
+      end
+      $logger.debug('Nginx metrics reported')
+      $chef.each do |m|
+        unless m['error'].nil? || m['times'].nil?
+          report_metric  'chef_' + m['error'] + '_' + host, 'Value', m['times']
+          puts  'chef_' + m['error'] + '_' + host + ' Value: ' + m['times'].to_s
+        end
+      end
+      $logger.debug('Chef metrics reported')
+
+      $check.each do |m|
+        unless m['service'].nil? || m['value'].nil?
+          report_metric  'check_' + m['service'] + '_' + host, 'Value', m['value']
+          # puts 'check_' + m['service'] + '_' + host + ' Value: ' + m['value'].to_s
+        end
+      end
+      $logger.debug('Checks metrics reported')
+
       $i += 1
       $number+=1
       if $i%60 == 0
         chef_recolector
         $logger.debug('Chef recolector executed')
       end
-      # binding.pry
     end
     $logger.info('Pollcycle number ' + $number.to_s + ' finished ')
   end
-
   #
   # Register this agent with the component.
   # The RedborderAgent is the name of the module that defines this
@@ -169,7 +168,6 @@ module RedborderAgent
   # PollCycle, a Metric and an Agent class, as defined above).
   #
   NewRelic::Plugin::Setup.install_agent :redborder, RedborderAgent
-
   #
   # Launch the agent; this never returns.
   #
