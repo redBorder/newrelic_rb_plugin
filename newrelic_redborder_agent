@@ -4,10 +4,10 @@ require 'rubygems'
 require 'bundler/setup'
 require 'snmp'
 require 'pry'
-require_relative 'bin/druid-master'
-require_relative 'bin/nginx-master'
-require_relative 'bin/chef-master'
-require_relative 'bin/check-master'
+require_relative 'src/druid-master'
+require_relative 'src/nginx-master'
+require_relative 'src/chef-master'
+require_relative 'src/check-master'
 require_relative 'lib/rb-monitor'
 require 'newrelic_plugin'
 require('logger')
@@ -19,7 +19,7 @@ module RedborderAgent
     agent_guid 'com.redborder.redborder'
     agent_version '1.0.2'
     agent_config_options :snmp_host, :snmp_community, :services
-    agent_human_labels('Manager') { `hostname`.strip.to_s }
+    agent_human_labels('Manager') { 'testingCluster' }
     $logger = Logger.new('/var/log/newrelic/plugin.log')
     argv = Rationalist.parse(ARGV)
     # ./newrelic_redborder_agent --log debug
