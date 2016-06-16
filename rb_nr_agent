@@ -20,8 +20,10 @@ start() {
           echo "$prog is currently running"
         else
           echo -n "Starting $prog: "
-          /opt/newrelic_rb_plugin/newrelic_redborder_agent > /dev/null &
-          RETVAL=$?
+	        cd /opt/newrelic_rb_plugin/
+          #./newrelic_redborder_agent > /dev/null &
+          `/usr/local/rvm/bin/rvm ruby-2.1.2 do /opt/newrelic_rb_plugin/newrelic_redborder_agent > /dev/null &`
+	        RETVAL=$?
           if [ $RETVAL -eq 0 ]; then
            echo_success
           else
