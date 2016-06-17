@@ -2,10 +2,7 @@ def cpu(manager)
   response = manager.get(['1.3.6.1.4.1.2021.11.11.0'])
   response.each_varbind do |vb|
     unless vb.nil?
-       #puts "#{vb.name.to_s} #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
-       #puts '1 cpu:' + vb.value.to_s
-       #puts '2 cpu: ' + (100 - (`snmpget -v 2c -c "redBorder" 10.0.203.8 1.3.6.1.4.1.2021.11.11.0 | awk '{print $4}'`).to_f).to_s
-       #return 1
+       # puts "#{vb.name.to_s} #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
       return 100 - vb.value.to_f
     end
   end
@@ -16,7 +13,6 @@ def mem_total(manager)
   response.each_varbind do |vb|
     unless vb.nil?
       # puts "#{vb.name.to_s}
-      #{vb.value.to_s}  #{vb.value.asn1_type}" unless vb.nil?
       return vb.value.to_f
     end
   end
