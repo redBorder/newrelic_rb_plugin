@@ -7,7 +7,6 @@ def druid_master
     $logger.debug("Started metrics parser with file: " + log_file)
     t = Thread.new do
       log_handler_druid(log_file)
-      binding.pry
     end
     threads << t
   end
