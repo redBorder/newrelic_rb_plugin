@@ -51,7 +51,7 @@ $> nohup ./newrelic_redborder_agent &
 By default loggin is enabled in INFO mode. Log file is located in the following path:
 `/var/log/newrelic/plugin.log`
 
-You can enable DEBUGG mode as follow:
+You can enable DEBUG mode as follow:
 ```sh
 $> nohup ./newrelic_redborder_agent --log debug &
 ```
