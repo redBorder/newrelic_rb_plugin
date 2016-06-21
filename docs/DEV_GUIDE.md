@@ -29,6 +29,8 @@ Druid metrics are reported from an array of hashes (`$metrics = []`). You can ha
 Each data is like a `tail -f`process that runs independently with each Druid log. That lets the poll_cycle not to waste time obtaining metrics.
 
 The main function that has the ability to manage those threads is `druid_master` inside `/src/druid-master.rb`. This function uses `log_handler_druid` function located at `src/tail_f_druid.rb` with the aim of process each new line added to the proper log file. The line processing occurs inside `druid_parser` function located at `src/tail_f_druid.rb`. This function obtain the metric a push it to the following algorithm:
+
+
 ![alt tag](https://s32.postimg.org/qzqvgk31h/druid_diagrama.png)
 
 
