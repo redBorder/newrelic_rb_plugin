@@ -5,7 +5,7 @@ def chef_parser(line)
     unless line.match(/ERROR:(.*)/).to_s.nil?
       matched = line.match(/ERROR:(.*)/).to_s
       error = (matched.include? 'retry') ? matched.split(',')[0] : matched
-#∫      puts error unless error.empty?
+#      puts error unless error.empty?
     end
     unless error.nil? || error.empty?
       found = false
