@@ -3,7 +3,7 @@ def check_master(service)
 
     cmd = 'lib/rb_nr_check ' + service
     value = `#{cmd}`
-    status = ($?.to_s.split(' ')[3] == '1') ? 0 : 1
+    status = ($?.to_s.split(' ')[3] == '1') ? 1 : 0
     puts 'service is ' + service + ' then status is ' + status.to_s
 
 
