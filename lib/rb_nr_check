@@ -4,10 +4,10 @@ SERVICE="$1"
 RESULT=`ps aux | grep ${SERVICE} | grep -c -v grep`
 if [ "${RESULT:-null}" -le "2" ]; then
     echo "${SERVICE} not running"
-    RETVAL=1
+    RETVAL=0
 else
     echo "running: ${SERVICE}"
-    RETVAL=0
+    RETVAL=1
 fi
 
 exit "$RETVAL"
