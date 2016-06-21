@@ -41,4 +41,4 @@ It is recommended to follow the threadable method for this.
 ---
 Data reported to New Relic platform will be automatically accessible from the Redborder plugin dashboards. You can add new charts or tables clicking on Edit dashboard button. You can also add more than one metrics to the same chart groping with the star key (\*). Example:
 
-Metrics with name "example_metric_a" and "example_metric_b" can be grouped with "example_metric_*" or "example_*".
+Metrics with name "example_metric_a" and "example_metric_b" can be grouped with "example_metric_\*" or "example_\*".
