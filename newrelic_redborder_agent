@@ -139,7 +139,7 @@ module RedborderAgent
       $chef.each do |m|
         unless m['error'].nil? || m['times'].nil?
           report_metric  'chef_' + m['error'] + '_' + host, 'Value', m['times']
-          puts  'chef_' + m['error'] + '_' + host + ' Value: ' + m['times'].to_s
+          # puts  'chef_' + m['error'] + '_' + host + ' Value: ' + m['times'].to_s
         end
       end
       $logger.debug('Chef metrics reported')
