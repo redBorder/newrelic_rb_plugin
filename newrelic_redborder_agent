@@ -169,7 +169,7 @@ module RedborderAgent
   #
   NewRelic::Plugin::Setup.install_agent :redborder, RedborderAgent
   #
-  # Launch the agent; this never returns.
+  # Launch the agent
   #
   NewRelic::Plugin::Run.setup_and_run
 end
