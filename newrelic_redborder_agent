@@ -16,6 +16,7 @@ require 'rationalist'
 module RedborderAgent
   class Agent < NewRelic::Plugin::Agent::Base
 
+# Agent configuration
     agent_guid 'com.redborder.redborder'
     agent_version '1.0.2'
     agent_config_options :snmp_host, :snmp_community, :services
@@ -41,6 +42,7 @@ module RedborderAgent
     $var = 0
     $number = 0
 
+# Thread managers for detailed services
     druid_master
     nginx_master
     chef_master
@@ -59,6 +61,7 @@ module RedborderAgent
       # poll_cycle is the loop where the agent collect&report metrics
       host = `hostname`.strip
 
+# SNMP manager initialization
       SNMP::Manager.open(community: snmp_community, host: snmp_host) do |manager|
         memory_total = mem_total(manager)
 
@@ -118,7 +121,9 @@ module RedborderAgent
                       'Value', 1
       end
       $logger.debug('General metrics reported')
-
+      #
+      # Druid metrics reporting
+      #
       $metrics.each do |m|
         unless m['metric'].nil? || m['service'].nil? || m['value'].nil?
           report_metric  'druid_' +
@@ -128,6 +133,9 @@ module RedborderAgent
         end
       end
       $logger.debug('Druid metrics reported')
+      #
+      # Nginx metrics reporting
+      #
       $nginx.each do |m|
         unless m['status'].nil? || m['times'].nil?
           report_metric  'nginx_' + m['status'] + '_' + host, 'Value', m['times']
@@ -136,6 +144,9 @@ module RedborderAgent
         end
       end
       $logger.debug('Nginx metrics reported')
+      #
+      # Chef metrics reporting
+      #
       $chef.each do |m|
         unless m['error'].nil? || m['times'].nil?
           report_metric  'chef_' + m['error'] + '_' + host, 'Value', m['times']
@@ -143,7 +154,9 @@ module RedborderAgent
         end
       end
       $logger.debug('Chef metrics reported')
-
+      #
+      # Check metrics reporting
+      #
       $check.each do |m|
         unless m['service'].nil? || m['value'].nil?
           report_metric  'check_' + m['service'] + '_' + host, 'Value', m['value']
