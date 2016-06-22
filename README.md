@@ -4,7 +4,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ![alt text](https://www.drupal.org/files/styles/grid-3/public/NewRelic.png?itok=tmr3C7yP "NewRelic")
 
-#### Version 1.0.1
+#### Version 1.0.2
 ---
 This is a agent for the Redborder platform through New Relic Custom Plugin environment.
 
