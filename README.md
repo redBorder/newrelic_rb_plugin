@@ -37,13 +37,13 @@ Wait a few minutes and you will see the angent automatically added to your plugi
 
 ### Let's send data!
 You can do this in two ways:
-1. Using service script:
+A. Using service script:
 ```sh
 $> service rb_nr_agent start
 ```
-Then it will be running in background
+  Then it will be running in background
 
-2. Directly with the main file
+B. Directly with the main file
 ```sh
 $> nohup ./newrelic_redborder_agent &
 ```
