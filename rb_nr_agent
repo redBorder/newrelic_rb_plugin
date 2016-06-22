@@ -11,35 +11,36 @@
 RETVAL=0
 prog="rb_nr_agent"
 executable="newrelic_redborder_agent"
-LOCKFILE=/var/lock/subsys/$prog
 
 . /etc/init.d/functions
 
 start() {
-        if [ -f $LOCKFILE ]; then
+        RESULT=`ps aux | grep $executable | grep -c -v grep`
+        if [ "${RESULT:-null}" -ge "1" ]; then
           echo "$prog is currently running"
         else
           echo -n "Starting $prog: "
-          cd /opt/newrelic_rb_plugin/
-          ./newrelic_redborder_agent > /dev/null &
-          RETVAL=$?
+	        cd /opt/newrelic_rb_plugin/
+          #./newrelic_redborder_agent > /dev/null &
+          `/usr/local/rvm/bin/rvm ruby-2.1.2 do /opt/newrelic_rb_plugin/newrelic_redborder_agent > /dev/null &`
+	        RETVAL=$?
           if [ $RETVAL -eq 0 ]; then
-           touch $LOCKFILE
            echo_success
           else
-            rm -rf $LOCKFILE
+           echo_failure; failure
+           RETVAL=1
           fi
           echo
         fi
         return $RETVAL
 }
 stop() {
+      RESULT=`ps aux | grep $executable | grep -c -v grep`
+      if [ "${RESULT:-null}" -ge "1" ]; then
         echo -n "Shutting down $prog: "
-        if [ -f $LOCKFILE  ] ; then
-          PID=$(ps aux | grep $executable | grep -v grep | awk {'print $2'} > /dev/null)
-          kill $PID
-          rm -f $LOCKFILE
+          ps aux | grep $executable | grep -v grep | awk {'print $2'} | xargs kill -9 > /dev/null
         else
+          echo "$executable is not running"
           echo_failure; failure
         fi
         RETVAL=$?
@@ -56,11 +57,14 @@ case "$1" in
         stop
         ;;
     status)
-        if [ -f $LOCKFILE ]; then
-          echo "$prog is running"
-        else
-          echo "$prog is stopped"
-        fi
+    RESULT=`ps aux | grep $executable | grep -c -v grep`
+    if [ "${RESULT:-null}" -ge "1" ]; then
+        echo "$executable is running"
+        RETVAL=1
+    else
+        echo "$executable is not running"
+        RETVAL=0
+    fi
         ;;
     restart)
         stop
