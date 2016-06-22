@@ -37,6 +37,7 @@ Wait a few minutes and you will see the angent automatically added to your plugi
 
 ### Let's send data!
 You can do this in two ways:
+
 A. Using service script:
 ```sh
 $> service rb_nr_agent start
