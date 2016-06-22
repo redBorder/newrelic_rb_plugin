@@ -53,4 +53,5 @@ By default loggin is enabled in INFO mode. Log file is located in the following 
 
 You can enable DEBUGG mode as follow:
 ``` sh
+$> ./newrelic_redborder_agent --log debug
 ```
