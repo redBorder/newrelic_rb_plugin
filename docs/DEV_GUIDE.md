@@ -31,7 +31,9 @@ Each data is like a `tail -f`process that runs independently with each Druid log
 The main function that has the ability to manage those threads is `druid_master` inside `/src/druid-master.rb`. This function uses `log_handler_druid` function located at `src/tail_f_druid.rb` with the aim of process each new line added to the proper log file. The line processing occurs inside `druid_parser` function located at `src/tail_f_druid.rb`. This function obtain the metric a push it to the following algorithm:
 
 
+
 ![alt tag](https://s32.postimg.org/v5m28pgp1/druid_algorithm.png)
+
 
 
 You can add new metrics with different obtaining technologies but always being careful of poll_cycle time consumption.
