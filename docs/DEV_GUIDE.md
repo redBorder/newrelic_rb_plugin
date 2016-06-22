@@ -31,7 +31,9 @@ Each data is like a `tail -f`process that runs independently with each Druid log
 The main function that has the ability to manage those threads is `druid_master` inside `/src/druid-master.rb`. This function uses `log_handler_druid` function located at `src/tail_f_druid.rb` with the aim of process each new line added to the proper log file. The line processing occurs inside `druid_parser` function located at `src/tail_f_druid.rb`. This function obtain the metric a push it to the following algorithm:
 
 
-![alt tag](https://s32.postimg.org/qzqvgk31h/druid_diagrama.png)
+
+![alt tag](https://s32.postimg.org/v5m28pgp1/druid_algorithm.png)
+
 
 
 You can add new metrics with different obtaining technologies but always being careful of poll_cycle time consumption.
@@ -41,4 +43,4 @@ It is recommended to follow the threadable method for this.
 ---
 Data reported to New Relic platform will be automatically accessible from the Redborder plugin dashboards. You can add new charts or tables clicking on Edit dashboard button. You can also add more than one metrics to the same chart groping with the star key (\*). Example:
 
-Metrics with name "example_metric_a" and "example_metric_b" can be grouped with "example_metric_*" or "example_*".
+Metrics with name "example_metric_a" and "example_metric_b" can be grouped with "example_metric_\*" or "example_\*".
